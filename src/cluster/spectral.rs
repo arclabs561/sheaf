@@ -213,7 +213,6 @@ impl SpectralClustering {
         let k = self.k;
 
         // Delegate k-means to `clump` (single source of truth for k-means correctness/perf).
-        let mut refs: Vec<&[f32]> = Vec::with_capacity(n);
         let mut rows: Vec<Vec<f32>> = Vec::with_capacity(n);
         for i in 0..n {
             let mut row = Vec::with_capacity(d);
@@ -222,9 +221,6 @@ impl SpectralClustering {
             }
             rows.push(row);
         }
-        for row in &rows {
-            refs.push(row.as_slice());
-        }
 
         // Use a small number of deterministic restarts and pick the best WCSS.
         // (k-means++ can still pick an unlucky first centroid on tiny problems.)
@@ -232,20 +228,18 @@ impl SpectralClustering {
         let mut best: Option<(f32, Vec<usize>)> = None;
 
         for t in 0..4u64 {
-            let cfg = clump::KMeansConfig {
-                k,
-                max_iters: self.kmeans_iter,
-                tol: 1e-4,
-                seed: base_seed.wrapping_add(t),
-            };
-            let res = clump::kmeans(&refs, &cfg)
+            let fit = clump::cluster::Kmeans::new(k)
+                .with_max_iter(self.kmeans_iter)
+                .with_tol(1e-4)
+                .with_seed(base_seed.wrapping_add(t))
+                .fit(&rows)
                 .map_err(|e| Error::Other(format!("clump kmeans failed: {e}")))?;
 
             // Compute WCSS in f32: sum_i ||x_i - c_{a_i}||^2
             let mut wcss = 0.0f32;
-            for (i, &a) in res.assignments.iter().enumerate() {
-                let c = &res.centroids[a];
-                let x = refs[i];
+            for (i, &a) in fit.labels.iter().enumerate() {
+                let c = &fit.centroids[a];
+                let x = &rows[i];
                 let mut d2 = 0.0f32;
                 for j in 0..d {
                     let diff = x[j] - c[j];
@@ -254,12 +248,13 @@ impl SpectralClustering {
                 wcss += d2;
             }
 
+            let labels = fit.labels;
             match &mut best {
-                None => best = Some((wcss, res.assignments)),
+                None => best = Some((wcss, labels)),
                 Some((best_wcss, best_assignments)) => {
                     if wcss < *best_wcss {
                         *best_wcss = wcss;
-                        *best_assignments = res.assignments;
+                        *best_assignments = labels;
                     }
                 }
             }

@@ -46,8 +46,8 @@
 
 use super::traits::Clustering;
 use crate::error::{Error, Result};
-use clump::{kmeans as clump_kmeans, ClumpError, KMeansConfig};
-use rand::Rng;
+use clump::cluster::Clustering as _;
+use clump::cluster::Kmeans as ClumpKmeans;
 
 /// K-means clustering algorithm.
 #[derive(Debug, Clone)]
@@ -90,75 +90,38 @@ impl Kmeans {
         self.seed = Some(seed);
         self
     }
-
-    fn clump_cfg(&self, n: usize) -> KMeansConfig {
-        // `tier::Kmeans` historically allowed `seed=None` (non-deterministic).
-        // `clump` always wants an explicit seed; generate one if needed.
-        let mut rng = rand::rng();
-        let seed = self.seed.unwrap_or_else(|| rng.random());
-
-        KMeansConfig {
-            k: self.k.min(n),
-            max_iters: self.max_iter,
-            tol: self.tol as f32,
-            seed,
-        }
-    }
 }
 
 impl Clustering for Kmeans {
     fn fit_predict(&self, data: &[Vec<f32>]) -> Result<Vec<usize>> {
-        if data.is_empty() {
-            return Err(Error::EmptyInput);
+        let mut km = ClumpKmeans::new(self.k)
+            .with_max_iter(self.max_iter)
+            .with_tol(self.tol);
+        if let Some(seed) = self.seed {
+            km = km.with_seed(seed);
         }
 
-        let n = data.len();
-        let d = data[0].len();
-
-        if self.k > n {
-            return Err(Error::InvalidClusterCount {
-                requested: self.k,
-                n_items: n,
-            });
-        }
-
-        if d == 0 {
-            return Err(Error::DimensionMismatch {
-                expected: 1,
-                found: 0,
-            });
-        }
-
-        // Validate dimensions and build slice refs for `clump` (backend-agnostic core).
-        let mut refs: Vec<&[f32]> = Vec::with_capacity(n);
-        for point in data {
-            if point.len() != d {
-                return Err(Error::DimensionMismatch {
-                    expected: d,
-                    found: point.len(),
-                });
-            }
-            refs.push(point.as_slice());
-        }
-
-        let cfg = self.clump_cfg(n);
-        let res = clump_kmeans(&refs, &cfg).map_err(|e| match e {
-            ClumpError::EmptyInput => Error::EmptyInput,
-            ClumpError::InvalidK => Error::InvalidClusterCount {
-                requested: self.k,
-                n_items: n,
-            },
-            ClumpError::DimensionMismatch { expected, got } => Error::DimensionMismatch {
-                expected,
-                found: got,
-            },
-        })?;
-
-        Ok(res.assignments)
+        km.fit_predict(data).map_err(map_clump_error)
     }
 
     fn n_clusters(&self) -> usize {
         self.k
+    }
+}
+
+fn map_clump_error(e: clump::Error) -> Error {
+    match e {
+        clump::Error::EmptyInput => Error::EmptyInput,
+        clump::Error::InvalidParameter { name, message } => {
+            Error::InvalidParameter { name, message }
+        }
+        clump::Error::InvalidClusterCount { requested, n_items } => {
+            Error::InvalidClusterCount { requested, n_items }
+        }
+        clump::Error::DimensionMismatch { expected, found } => {
+            Error::DimensionMismatch { expected, found }
+        }
+        clump::Error::Other(msg) => Error::Other(msg),
     }
 }
 
