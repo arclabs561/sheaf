@@ -70,7 +70,7 @@
 //!
 //! ```rust
 //! use petgraph::graph::UnGraph;
-//! use tier::community::{Leiden, CommunityDetection};
+//! use parti::community::{Leiden, CommunityDetection};
 //!
 //! // Build a graph
 //! let mut graph = UnGraph::<(), ()>::new_undirected();

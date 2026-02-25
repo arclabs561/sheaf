@@ -38,7 +38,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use tier::cluster::spectral::SpectralClustering;
+//! use parti::cluster::spectral::SpectralClustering;
 //! use ndarray::array;
 //!
 //! let points = array![

@@ -1,4 +1,4 @@
-//! kNN graph construction from embeddings using jin.
+//! kNN graph construction from embeddings using vicinity.
 //!
 //! This module bridges vector embeddings to community detection algorithms.
 //! Given a set of embeddings, it constructs a k-nearest neighbor graph where:
@@ -11,7 +11,7 @@
 //! # The Connection: From Embeddings to Communities
 //!
 //! ```text
-//! Embeddings → jin (HNSW) → kNN Graph → Leiden → Communities
+//! Embeddings → vicinity (HNSW) → kNN Graph → Leiden → Communities
 //! ```
 //!
 //! This is the algorithmic pipeline behind many modern clustering approaches:
@@ -32,7 +32,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use tier::community::{knn_graph_from_embeddings, Leiden, CommunityDetection};
+//! use parti::community::{knn_graph_from_embeddings, Leiden, CommunityDetection};
 //!
 //! // Your embeddings (e.g., from sentence-transformers)
 //! let embeddings: Vec<Vec<f32>> = /* ... */;
@@ -48,7 +48,7 @@
 //! # Performance Considerations
 //!
 //! - For n embeddings, brute-force kNN is O(n²)
-//! - Using jin's HNSW, we get O(n log n) approximate kNN
+//! - Using vicinity's HNSW, we get O(n log n) approximate kNN
 //! - The approximation has minimal impact on community quality
 //!
 //! # References
@@ -57,7 +57,7 @@
 //! - GraphRAG: Microsoft (2024). "From Local to Global: A Graph RAG Approach"
 
 use crate::{Error, Result};
-use jin::hnsw::{HNSWIndex, HNSWParams};
+use vicinity::hnsw::{HNSWIndex, HNSWParams};
 use petgraph::graph::UnGraph;
 
 /// Configuration for kNN graph construction.

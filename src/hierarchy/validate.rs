@@ -9,7 +9,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use tier::tree::{RaptorTree, HealthCheck};
+//! use parti::tree::{RaptorTree, HealthCheck};
 //!
 //! let tree = RaptorTree::new(config);
 //! // ... build tree ...

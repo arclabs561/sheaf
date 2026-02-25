@@ -1,5 +1,5 @@
-use tier::community::CommunityDetection;
-use tier::{knn_graph_from_embeddings, KnnGraphConfig, Leiden, WeightFunction};
+use parti::community::CommunityDetection;
+use parti::{knn_graph_from_embeddings, KnnGraphConfig, Leiden, WeightFunction};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Minimal end-to-end: embeddings -> kNN graph -> Leiden communities.
@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         weight_fn: WeightFunction::InverseDistance,
         ..Default::default()
     };
-    let graph = tier::knn_graph_with_config(&embeddings, &config)?;
+    let graph = parti::knn_graph_with_config(&embeddings, &config)?;
 
     // Detect communities.
     let leiden = Leiden::new().with_resolution(1.0);

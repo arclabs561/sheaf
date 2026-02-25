@@ -1,14 +1,14 @@
 [package]
-name = "tier"
+name = "parti"
 version = "0.1.0"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
 description = "Clustering and hierarchical structure primitives"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/arclabs561/tier"
-homepage = "https://github.com/arclabs561/tier"
-documentation = "https://docs.rs/tier"
+repository = "https://github.com/arclabs561/parti"
+homepage = "https://github.com/arclabs561/parti"
+documentation = "https://docs.rs/parti"
 keywords = ["clustering", "community-detection", "hierarchy", "conformal-prediction"]
 categories = ["algorithms", "science", "mathematics"]
 
@@ -30,7 +30,8 @@ kodama = { version = "0.3", optional = true }
 petgraph = { version = "0.6", optional = true }
 
 # kNN graph construction from embeddings (ecosystem crate)
-jin = { version = "0.1.0", optional = true }
+# Version here; dev workspace patches to path so we use one copy when building from dev.
+vicinity = { version = "0.1.0", optional = true }
 
 # Parallel processing
 rayon = { version = "1.10", optional = true }
@@ -75,7 +76,7 @@ spectral-faer = ["spectral", "lapl/faer"]
 spectral-sparse = ["spectral", "lapl/sparse"]
 
 # kNN graph construction from embeddings (for community detection on vector data)
-knn-graph = ["community", "jin"]
+knn-graph = ["community", "vicinity"]
 
 # Optional
 parallel = ["rayon"]

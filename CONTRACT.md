@@ -1,9 +1,9 @@
-## tier — stable contract (draft v0)
+## parti — stable contract (draft v0)
 
-`tier` is a **general-purpose hierarchy + clustering primitives** crate.
-It is not Anno-specific. Anno-specific “tiering product” logic should live elsewhere.
+`parti` is a **general-purpose hierarchy + clustering primitives** crate.
+It is not Anno-specific. Anno-specific "tiering product" logic should live elsewhere.
 
-This contract defines the stable surface: what `tier` promises to callers.
+This contract defines the stable surface: what `parti` promises to callers.
 
 ### Scope (in)
 
@@ -21,9 +21,9 @@ This contract defines the stable surface: what `tier` promises to callers.
 
 ### Non-scope (out)
 
-- No domain semantics (no “NER/coref” notions, no document types).
+- No domain semantics (no "NER/coref" notions, no document types).
 - No IO formats as the primary interface (serde is optional).
-- No “product CLI” by default (examples are fine; stable CLI lives elsewhere).
+- No "product CLI" by default (examples are fine; stable CLI lives elsewhere).
 
 ### Inputs / outputs (shapes)
 
@@ -48,11 +48,10 @@ This contract defines the stable surface: what `tier` promises to callers.
 ### Compatibility promises
 
 - Public structs and enums evolve by **adding fields/variants**, not changing meanings.
-- Features stay meaning-stable: a feature name shouldn’t change what it “means.”
+- Features stay meaning-stable: a feature name shouldn't change what it "means."
 
 ### Relation to the stack
 
-- `tier` is a **substrate** library (Tekne L3 “Structures” in your internal map).
-- Downstream crates may wrap it into domain-specific products (e.g. an “anno-tiering” crate),
-  but `tier` itself should remain domain-agnostic.
-
+- `parti` is a **substrate** library (Tekne L3 "Structures" in your internal map).
+- Downstream crates may wrap it into domain-specific products (e.g. an "anno-tiering" crate),
+  but `parti` itself should remain domain-agnostic.

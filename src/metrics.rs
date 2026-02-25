@@ -25,7 +25,7 @@
 //! # Example
 //!
 //! ```rust
-//! use tier::metrics::{nmi, ari, purity};
+//! use parti::metrics::{nmi, ari, purity};
 //!
 //! let pred = [0, 0, 1, 1, 2, 2];
 //! let truth = [0, 0, 0, 1, 1, 1];
@@ -67,7 +67,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```rust
-/// use tier::metrics::nmi;
+/// use parti::metrics::nmi;
 ///
 /// // Perfect clustering
 /// let pred = [0, 0, 1, 1];
@@ -238,7 +238,7 @@ fn nmi_impl(
 /// # Example
 ///
 /// ```rust
-/// use tier::metrics::ari;
+/// use parti::metrics::ari;
 ///
 /// let pred = [0, 0, 1, 1];
 /// let truth = [0, 0, 1, 1];

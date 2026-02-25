@@ -1,10 +1,10 @@
 //! Small example: hierarchical conformal prediction over a toy tree.
 
 use faer::Mat;
-use tier::{HierarchicalConformal, HierarchyTree, ReconciliationMethod};
-use tier::{RaptorTree, TreeConfig};
+use parti::{HierarchicalConformal, HierarchyTree, ReconciliationMethod};
+use parti::{RaptorTree, TreeConfig};
 
-fn main() -> tier::Result<()> {
+fn main() -> parti::Result<()> {
     // 1. Create a simple hierarchy (e.g., from RAPTOR)
     let chunks = vec![
         "The cat sat on the mat.".to_string(),
