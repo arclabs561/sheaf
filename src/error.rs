@@ -1,6 +1,6 @@
 use core::fmt;
 
-/// Result alias for `tier`.
+/// Result alias for `parti`.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors returned by clustering and hierarchy primitives.

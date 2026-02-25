@@ -1,4 +1,4 @@
-//! # tier
+//\! # parti
 //!
 //! Hierarchical abstraction: tree structures + reconciliation / conformal primitives for multi-resolution views.
 //!
@@ -9,7 +9,7 @@
 pub mod cluster;
 #[cfg(feature = "community")]
 pub mod community;
-/// Error types used across `tier`.
+/// Error types used across `parti`.
 pub mod error;
 pub mod hierarchy;
 pub mod metrics;
