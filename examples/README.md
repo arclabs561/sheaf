@@ -18,3 +18,4 @@ cargo run -p parti --example embedding_clustering --features knn-graph
 |---|---|---|
 | `embedding_clustering` | `knn-graph` | Generates 250 points in 4 Gaussian clusters (8D) + noise, builds a kNN graph via HNSW, and runs Leiden community detection. Prints cluster sizes and purity. |
 | `hierarchical_conformal` | default | Split conformal prediction on a 2-level hierarchy (1 root + 3 leaves). Calibrates on synthetic data with systematic bias, produces reconciled prediction intervals, and verifies coherence (root = sum of leaves) and empirical coverage. |
+| `raptor_retrieval` | default | Builds a RAPTOR tree from 20 synthetic documents (4 topics, bag-of-words vectors), clusters by cosine similarity, and searches at leaf vs. root level to show narrow vs. broad retrieval. |
