@@ -94,6 +94,15 @@ proptest = "1.9"
 criterion = { version = "0.7", features = ["html_reports"] }
 
 [[example]]
+name = "forecast_reconciliation"
+path = "examples/forecast_reconciliation.rs"
+
+[[example]]
+name = "clustering_comparison"
+path = "examples/clustering_comparison.rs"
+required-features = ["cluster"]
+
+[[example]]
 name = "embedding_clustering"
 path = "examples/embedding_clustering.rs"
 required-features = ["knn-graph"]
