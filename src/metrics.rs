@@ -41,6 +41,9 @@
 //! - Strehl & Ghosh (2002). "Cluster ensembles" (NMI)
 //! - Rosenberg & Hirschberg (2007). "V-Measure"
 //! - Vinh et al. (2010). "Information theoretic measures for clusterings comparison"
+//! - Gutierrez-Bernal et al. (2025). "Information-Theoretic Quality Metric of
+//!   Low-Dimensional Embeddings" -- MI-based metric for evaluating embedding quality
+//!   before clustering; a potential `embedding_quality` function for this module
 
 use std::collections::HashMap;
 

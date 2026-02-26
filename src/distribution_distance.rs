@@ -15,6 +15,18 @@
 //!
 //! - The particular default kernel bandwidth heuristic (if we ever add one).
 //! - Whether we expose more kernels/costs (keep the contract explicit).
+//!
+//! ## References and Future Directions
+//!
+//! - Schrab et al. (2021), "MMD Aggregated Two-Sample Test" -- aggregates over multiple
+//!   kernel bandwidths; avoids the single-sigma choice in `rbf_sigma`. Potential extension:
+//!   `mmd_aggregated` that tests over a grid of bandwidths automatically.
+//! - Nguyen & Ho (2023), "Energy-Based Sliced Wasserstein Distance" -- learns informative
+//!   projection directions instead of random ones; could reduce `sw_projections` needed
+//! - Carlier et al. (2025), "Sharp Comparisons Between Sliced and Standard 1-Wasserstein"
+//!   -- tight bounds establishing when sliced W1 is a faithful proxy for standard W1
+//! - Chaibub Neto (2024), "Computationally Efficient Permutation Tests for Energy Distance
+//!   or MMD" -- achieves O(n log n) vs current O(n^2) for large-scale two-sample testing
 
 use crate::{Error, Result};
 
