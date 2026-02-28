@@ -1,9 +1,9 @@
-## parti — stable contract (draft v0)
+## sheaf — stable contract (draft v0)
 
-`parti` is a **general-purpose hierarchy + clustering primitives** crate.
+`sheaf` is a **general-purpose hierarchy + clustering primitives** crate.
 It is not Anno-specific. Anno-specific "tiering product" logic should live elsewhere.
 
-This contract defines the stable surface: what `parti` promises to callers.
+This contract defines the stable surface: what `sheaf` promises to callers.
 
 ### Scope (in)
 
@@ -52,6 +52,6 @@ This contract defines the stable surface: what `parti` promises to callers.
 
 ### Relation to the stack
 
-- `parti` is a **substrate** library (Tekne L3 "Structures" in your internal map).
-- Downstream crates may wrap it into domain-specific products (e.g. an "anno-tiering" crate),
-  but `parti` itself should remain domain-agnostic.
+- `sheaf` is a **substrate** library: general-purpose primitives, not domain-specific.
+- Downstream crates may wrap it into domain-specific products,
+  but `sheaf` itself should remain domain-agnostic.
