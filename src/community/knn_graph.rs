@@ -181,7 +181,7 @@ pub fn knn_graph_with_config(
                 }
             }
         }
-        distances.sort_by(|a, b| a.sheafal_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         distances.get(distances.len() / 2).copied().unwrap_or(1.0)
     } else {
         1.0

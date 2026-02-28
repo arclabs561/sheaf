@@ -37,7 +37,7 @@
 //!
 //! # References
 //!
-//! - Hubert & Arabie (1985). "Comparing sheaftions" (ARI)
+//! - Hubert & Arabie (1985). "Comparing partitions" (ARI)
 //! - Strehl & Ghosh (2002). "Cluster ensembles" (NMI)
 //! - Rosenberg & Hirschberg (2007). "V-Measure"
 //! - Vinh et al. (2010). "Information theoretic measures for clusterings comparison"
