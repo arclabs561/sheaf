@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/arclabs561/sheaf"
 homepage = "https://github.com/arclabs561/sheaf"
 documentation = "https://docs.rs/sheaf"
-keywords = ["clustering", "community-detection", "hierarchy", "conformal-prediction"]
+keywords = ["clustering", "community", "hierarchy", "conformal"]
 categories = ["algorithms", "science", "mathematics"]
 
 [dependencies]
