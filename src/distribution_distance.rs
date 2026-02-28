@@ -110,7 +110,7 @@ fn mmd_rbf_biased(x: ArrayView2<'_, f32>, y: ArrayView2<'_, f32>, sigma: f64) ->
         });
     }
 
-    // rkhs' public API uses Vec<Vec<f64>>. This is explicit and keeps `parti`
+    // rkhs' public API uses Vec<Vec<f64>>. This is explicit and keeps `sheaf`
     // independent of rkhs' internal ndarray integration choices.
     fn to_vecs(a: ArrayView2<'_, f32>) -> Vec<Vec<f64>> {
         a.outer_iter()
@@ -134,7 +134,7 @@ fn sliced_wasserstein(
         return Ok(0.0);
     }
     // Note: the crates.io `wass` API currently accepts owned `Array2` references.
-    // We keep `parti`'s input type as `ArrayView2` and make the conversion explicit here.
+    // We keep `sheaf`'s input type as `ArrayView2` and make the conversion explicit here.
     //
     // If/when `wass` exposes a `*_view` API publicly, we can remove this allocation.
     let x_owned: Array2<f32> = x.to_owned();

@@ -5,9 +5,9 @@
 //! are centroid vectors with concatenated text.  Searches at leaf vs. root
 //! level to demonstrate narrow vs. broad retrieval.
 //!
-//! Run: `cargo run -p parti --example raptor_retrieval`
+//! Run: `cargo run -p sheaf --example raptor_retrieval`
 
-use parti::{RaptorTree, TreeConfig};
+use sheaf::{RaptorTree, TreeConfig};
 
 type Doc = (String, Vec<f32>);
 

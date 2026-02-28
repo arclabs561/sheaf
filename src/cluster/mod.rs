@@ -76,7 +76,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use parti::cluster::{Kmeans, Gmm, Clustering, SoftClustering};
+//! use sheaf::cluster::{Kmeans, Gmm, Clustering, SoftClustering};
 //!
 //! let data = vec![
 //!     vec![0.0, 0.0],

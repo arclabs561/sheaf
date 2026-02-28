@@ -8,10 +8,10 @@
 //! Pipeline:
 //!   synthetic embeddings -> vicinity (HNSW) -> kNN graph -> Leiden -> communities
 //!
-//! Requires: `cargo run -p parti --example embedding_clustering --features knn-graph`
+//! Requires: `cargo run -p sheaf --example embedding_clustering --features knn-graph`
 
-use parti::community::CommunityDetection;
-use parti::{knn_graph_with_config, KnnGraphConfig, Leiden, WeightFunction};
+use sheaf::community::CommunityDetection;
+use sheaf::{knn_graph_with_config, KnnGraphConfig, Leiden, WeightFunction};
 use std::collections::BTreeMap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

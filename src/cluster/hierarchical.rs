@@ -124,6 +124,49 @@ impl HierarchicalClustering {
         Ok(dendro)
     }
 
+    /// Fit a dendrogram from a precomputed condensed distance matrix.
+    ///
+    /// The condensed matrix is the upper triangle of the full pairwise distance
+    /// matrix in row-major order (same format as SciPy's `pdist`). For `n` items,
+    /// the length must be `n * (n - 1) / 2`.
+    ///
+    /// This is useful when the distance metric is not Euclidean (e.g., `1 - similarity`
+    /// from a learned scoring function).
+    ///
+    /// **Note**: Ward linkage requires Euclidean distances to be meaningful.
+    pub fn fit_dendrogram_from_condensed(
+        &self,
+        mut condensed: Vec<f64>,
+        n: usize,
+    ) -> Result<Dendrogram> {
+        let expected_len = n * (n - 1) / 2;
+        if condensed.len() != expected_len {
+            return Err(Error::DimensionMismatch {
+                expected: expected_len,
+                found: condensed.len(),
+            });
+        }
+        if n == 0 {
+            return Err(Error::EmptyInput);
+        }
+
+        let method = match self.linkage {
+            Linkage::Single => KodamaMethod::Single,
+            Linkage::Complete => KodamaMethod::Complete,
+            Linkage::Average => KodamaMethod::Average,
+            Linkage::Ward => KodamaMethod::Ward,
+        };
+
+        let dend = kodama_linkage(&mut condensed, n, method);
+
+        let mut dendro = Dendrogram::new(n);
+        for step in dend.steps() {
+            dendro.add_merge(step.cluster1, step.cluster2, step.dissimilarity, step.size);
+        }
+
+        Ok(dendro)
+    }
+
     /// Euclidean distance between two points.
     #[inline]
     fn euclidean_distance_f64(&self, a: &[f32], b: &[f32]) -> f64 {
@@ -179,5 +222,72 @@ mod tests {
 
         assert_eq!(dendro.n_items(), 3);
         assert_eq!(dendro.n_merges(), 2);
+    }
+
+    #[test]
+    fn test_from_condensed_matches_from_vectors() {
+        let data = vec![
+            vec![0.0, 0.0],
+            vec![0.1, 0.1],
+            vec![10.0, 10.0],
+            vec![10.1, 10.1],
+        ];
+        let n = data.len();
+
+        // Build condensed distance matrix manually
+        let mut condensed = Vec::new();
+        for i in 0..(n - 1) {
+            for j in (i + 1)..n {
+                let d: f64 = data[i]
+                    .iter()
+                    .zip(data[j].iter())
+                    .map(|(a, b)| {
+                        let dx = *a as f64 - *b as f64;
+                        dx * dx
+                    })
+                    .sum::<f64>()
+                    .sqrt();
+                condensed.push(d);
+            }
+        }
+
+        let hc = HierarchicalClustering::new(2);
+        let labels_vec = hc.fit_predict(&data).unwrap();
+        let labels_condensed = hc
+            .fit_dendrogram_from_condensed(condensed, n)
+            .unwrap()
+            .cut_to_k(2)
+            .unwrap();
+
+        // Same clustering result
+        assert_eq!(labels_vec[0], labels_vec[1]);
+        assert_eq!(labels_condensed[0], labels_condensed[1]);
+        assert_eq!(labels_vec[2], labels_vec[3]);
+        assert_eq!(labels_condensed[2], labels_condensed[3]);
+        assert_ne!(labels_vec[0], labels_vec[2]);
+        assert_ne!(labels_condensed[0], labels_condensed[2]);
+    }
+
+    #[test]
+    fn test_from_condensed_similarity_to_distance() {
+        // Simulate coreference: convert similarity scores to distances
+        // Items 0,1 are coreferent (high similarity); 2 is separate
+        let similarities = vec![
+            0.9, // (0,1) - high similarity
+            0.1, // (0,2) - low similarity
+            0.2, // (1,2) - low similarity
+        ];
+        let condensed: Vec<f64> = similarities.iter().map(|s| 1.0 - s).collect();
+
+        let hc = HierarchicalClustering::new(2);
+        let labels = hc
+            .fit_dendrogram_from_condensed(condensed, 3)
+            .unwrap()
+            .cut_to_k(2)
+            .unwrap();
+
+        // 0 and 1 should be in the same cluster
+        assert_eq!(labels[0], labels[1]);
+        assert_ne!(labels[0], labels[2]);
     }
 }

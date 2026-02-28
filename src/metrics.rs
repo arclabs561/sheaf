@@ -25,7 +25,7 @@
 //! # Example
 //!
 //! ```rust
-//! use parti::metrics::{nmi, ari, purity};
+//! use sheaf::metrics::{nmi, ari, purity};
 //!
 //! let pred = [0, 0, 1, 1, 2, 2];
 //! let truth = [0, 0, 0, 1, 1, 1];
@@ -37,7 +37,7 @@
 //!
 //! # References
 //!
-//! - Hubert & Arabie (1985). "Comparing partitions" (ARI)
+//! - Hubert & Arabie (1985). "Comparing sheaftions" (ARI)
 //! - Strehl & Ghosh (2002). "Cluster ensembles" (NMI)
 //! - Rosenberg & Hirschberg (2007). "V-Measure"
 //! - Vinh et al. (2010). "Information theoretic measures for clusterings comparison"
@@ -70,7 +70,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```rust
-/// use parti::metrics::nmi;
+/// use sheaf::metrics::nmi;
 ///
 /// // Perfect clustering
 /// let pred = [0, 0, 1, 1];
@@ -241,7 +241,7 @@ fn nmi_impl(
 /// # Example
 ///
 /// ```rust
-/// use parti::metrics::ari;
+/// use sheaf::metrics::ari;
 ///
 /// let pred = [0, 0, 1, 1];
 /// let truth = [0, 0, 1, 1];

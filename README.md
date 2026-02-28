@@ -1,4 +1,4 @@
-# parti
+# sheaf
 
 Partition, reconcile, predict. Clustering, community detection, and hierarchical conformal prediction in Rust.
 
@@ -22,24 +22,24 @@ cargo run --example embedding_clustering --features knn-graph
 cargo run --example hierarchical_conformal
 ```
 
-Used by [`flowmatch`](https://github.com/arclabs561/flowmatch) (behind `--features parti-evals`) to evaluate whether generated samples preserve the cluster structure of real data -- for example, whether generated earthquake locations form the same geographic clusters as the USGS catalog.
+Used by [`flowmatch`](https://github.com/arclabs561/flowmatch) (behind `--features sheaf-evals`) to evaluate whether generated samples preserve the cluster structure of real data -- for example, whether generated earthquake locations form the same geographic clusters as the USGS catalog.
 
 ## What it provides
 
 - **Clustering**: k-means, DBSCAN, hierarchical clustering.
 - **Community detection**: kNN graph construction (feature-gated), Leiden/Louvain/label propagation.
 - **Hierarchy + conformal**: hierarchical reconciliation, split conformal prediction with coherence guarantees.
-- **Metrics**: clustering evaluation helpers (used by `flowmatch` parti-eval examples).
+- **Metrics**: clustering evaluation helpers (used by `flowmatch` sheaf-eval examples).
 
 ## Usage
 
 ```toml
 [dependencies]
-parti = "0.1.0"
+sheaf = "0.1.0"
 ```
 
 ```rust
-use parti::{HierarchicalConformal, HierarchyTree, ReconciliationMethod};
+use sheaf::{HierarchicalConformal, HierarchyTree, ReconciliationMethod};
 
 // Build hierarchy, get summing matrix
 let h_tree = HierarchyTree::from_raptor(&tree);

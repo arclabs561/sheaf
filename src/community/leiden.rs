@@ -203,18 +203,65 @@ impl CommunityState {
     }
 }
 
+impl Leiden {
+    /// Detect communities in a weighted graph with `f32` edge weights.
+    ///
+    /// Edge weights are used directly in the modularity computation. Higher
+    /// weights indicate stronger connections. This is the recommended method
+    /// when you have meaningful edge weights (e.g., similarity scores).
+    pub fn detect_weighted<N>(&self, graph: &UnGraph<N, f32>) -> Result<Vec<usize>> {
+        let n = graph.node_count();
+        if n == 0 {
+            return Err(Error::EmptyInput);
+        }
+        if graph.edge_count() == 0 {
+            return Ok((0..n).collect());
+        }
+
+        let edges: Vec<(usize, usize, f64)> = graph
+            .edge_references()
+            .filter_map(|e| {
+                let i = e.source().index();
+                let j = e.target().index();
+                if i < j {
+                    Some((i, j, *e.weight() as f64))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        self.detect_from_edges(n, &edges)
+    }
+
+    /// Internal: run Leiden on a weighted edge list.
+    fn detect_from_edges(&self, n: usize, edges: &[(usize, usize, f64)]) -> Result<Vec<usize>> {
+        let wg = WeightedGraph::from_edges(n, edges);
+        let mut state = CommunityState::new_singletons(n, &wg.degrees);
+
+        for _level in 0..self.max_iter {
+            let improved = self.local_moving_phase(&wg, &mut state);
+            if !improved {
+                break;
+            }
+            self.refinement_phase(&wg, &mut state);
+        }
+
+        Ok(renumber_communities(&state.assignment))
+    }
+}
+
 impl CommunityDetection for Leiden {
+    /// Detect communities in an unweighted graph (all edges have weight 1.0).
     fn detect<N, E>(&self, graph: &UnGraph<N, E>) -> Result<Vec<usize>> {
         let n = graph.node_count();
         if n == 0 {
             return Err(Error::EmptyInput);
         }
-
         if graph.edge_count() == 0 {
             return Ok((0..n).collect());
         }
 
-        // Convert to weighted edge list
         let edges: Vec<(usize, usize, f64)> = graph
             .edge_references()
             .filter_map(|e| {
@@ -228,23 +275,7 @@ impl CommunityDetection for Leiden {
             })
             .collect();
 
-        let wg = WeightedGraph::from_edges(n, &edges);
-        let mut state = CommunityState::new_singletons(n, &wg.degrees);
-
-        // Main Leiden loop
-        for _level in 0..self.max_iter {
-            // Phase 1: Local moving
-            let improved = self.local_moving_phase(&wg, &mut state);
-            if !improved {
-                break;
-            }
-
-            // Phase 2: Refinement (the key Leiden innovation)
-            self.refinement_phase(&wg, &mut state);
-        }
-
-        // Renumber communities consecutively
-        Ok(renumber_communities(&state.assignment))
+        self.detect_from_edges(n, &edges)
     }
 
     fn resolution(&self) -> f64 {

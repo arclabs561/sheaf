@@ -1,19 +1,19 @@
-# parti examples
+# sheaf examples
 
-Examples for the `parti` clustering and hierarchical structure crate.
+Examples for the `sheaf` clustering and hierarchical structure crate.
 
 ## Running
 
 ```sh
 # Default features (hierarchy only):
-cargo run -p parti --example forecast_reconciliation
-cargo run -p parti --example hierarchical_conformal
+cargo run -p sheaf --example forecast_reconciliation
+cargo run -p sheaf --example hierarchical_conformal
 
 # Requires cluster feature:
-cargo run -p parti --example clustering_comparison --features cluster
+cargo run -p sheaf --example clustering_comparison --features cluster
 
 # Requires knn-graph feature:
-cargo run -p parti --example embedding_clustering --features knn-graph
+cargo run -p sheaf --example embedding_clustering --features knn-graph
 ```
 
 ## Examples

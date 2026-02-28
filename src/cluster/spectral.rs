@@ -9,7 +9,7 @@
 //! # When to Use Spectral Clustering
 //!
 //! Spectral clustering excels at finding non-convex clusters that k-means misses.
-//! It's particularly good for:
+//! It's sheafcularly good for:
 //!
 //! - Image segmentation (groups of similar pixels)
 //! - Community detection in graphs
@@ -38,7 +38,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use parti::cluster::spectral::SpectralClustering;
+//! use sheaf::cluster::spectral::SpectralClustering;
 //! use ndarray::array;
 //!
 //! let points = array![

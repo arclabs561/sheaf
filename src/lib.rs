@@ -1,4 +1,4 @@
-//\! # parti
+//\! # sheaf
 //!
 //! Hierarchical abstraction: tree structures + reconciliation / conformal primitives for multi-resolution views.
 //!
@@ -9,7 +9,7 @@
 pub mod cluster;
 #[cfg(feature = "community")]
 pub mod community;
-/// Error types used across `parti`.
+/// Error types used across `sheaf`.
 pub mod error;
 pub mod hierarchy;
 pub mod metrics;

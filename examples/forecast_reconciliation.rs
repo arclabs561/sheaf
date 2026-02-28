@@ -18,9 +18,9 @@
 //! adjusts forecasts to satisfy the summing constraints.
 
 use faer::Mat;
-use parti::{reconcile, ReconciliationMethod, SummingMatrix};
+use sheaf::{reconcile, ReconciliationMethod, SummingMatrix};
 
-fn main() -> parti::Result<()> {
+fn main() -> sheaf::Result<()> {
     // -- Build the summing matrix S (6 nodes x 4 leaves) --
     //
     // Row order: Total, Electronics, Clothing, Phones, Laptops, Shirts, Pants

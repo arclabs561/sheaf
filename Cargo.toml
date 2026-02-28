@@ -1,14 +1,14 @@
 [package]
-name = "parti"
+name = "sheaf"
 version = "0.1.0"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
-description = "Clustering and hierarchical structure primitives"
+description = "Hierarchical structure, community detection, reconciliation, and conformal prediction"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/arclabs561/parti"
-homepage = "https://github.com/arclabs561/parti"
-documentation = "https://docs.rs/parti"
+repository = "https://github.com/arclabs561/sheaf"
+homepage = "https://github.com/arclabs561/sheaf"
+documentation = "https://docs.rs/sheaf"
 keywords = ["clustering", "community-detection", "hierarchy", "conformal-prediction"]
 categories = ["algorithms", "science", "mathematics"]
 
@@ -59,7 +59,7 @@ std = []
 
 # Algorithm groups
 cluster = ["std", "ndarray", "rand", "rand_distr", "clump", "dep:kodama"]
-community = ["std", "petgraph"]
+community = ["std", "petgraph", "rand"]
 summarize = ["std"]
 full = ["cluster", "community", "summarize", "parallel", "serde", "knn-graph", "metrics", "spectral-faer", "spectral-sparse", "rkhs", "wass", "kuji"]
 

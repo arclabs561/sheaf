@@ -12,9 +12,9 @@
 //! - den Hengst et al. (2025), "Hierarchical Conformal Classification"
 
 use faer::Mat;
-use parti::{HierarchicalConformal, ReconciliationMethod, SummingMatrix};
+use sheaf::{HierarchicalConformal, ReconciliationMethod, SummingMatrix};
 
-fn main() -> parti::Result<()> {
+fn main() -> sheaf::Result<()> {
     // --- Hierarchy: 1 root (= sum of 3 leaves), so m=4 nodes, n=3 bottom-level ---
     let n_leaves = 3;
     let s = SummingMatrix::simple_star(n_leaves);

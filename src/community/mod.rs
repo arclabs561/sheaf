@@ -21,7 +21,7 @@
 //! - δ(c_i, c_j) = 1 if i and j are in same community
 //!
 //! **Intuition**: For each pair in the same community, we add (actual edges) -
-//! (expected edges). A good partition has Q > 0, meaning more internal edges
+//! (expected edges). A good sheaftion has Q > 0, meaning more internal edges
 //! than expected by chance.
 //!
 //! ## The Resolution Parameter γ
@@ -70,7 +70,7 @@
 //!
 //! ```rust
 //! use petgraph::graph::UnGraph;
-//! use parti::community::{Leiden, CommunityDetection};
+//! use sheaf::community::{Leiden, CommunityDetection};
 //!
 //! // Build a graph
 //! let mut graph = UnGraph::<(), ()>::new_undirected();

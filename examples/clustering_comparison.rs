@@ -2,10 +2,10 @@
 //!
 //! Generates 300 points in 5D arranged in 4 known clusters with added noise,
 //! then runs K-means, GMM, and hierarchical (Ward) clustering. Results are
-//! compared using ARI, NMI, and purity from `parti::metrics`.
+//! compared using ARI, NMI, and purity from `sheaf::metrics`.
 
-use parti::cluster::{Clustering, Gmm, HierarchicalClustering, Kmeans, Linkage, SoftClustering};
-use parti::metrics::{ari, nmi, purity};
+use sheaf::cluster::{Clustering, Gmm, HierarchicalClustering, Kmeans, Linkage, SoftClustering};
+use sheaf::metrics::{ari, nmi, purity};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let n_per = 75;
