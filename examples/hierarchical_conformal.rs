@@ -33,9 +33,13 @@ fn main() -> sheaf::Result<()> {
     // Deterministic pseudo-random noise via LCG.
     let mut lcg: u64 = 42;
     let next_noise = |state: &mut u64, scale: f64| -> f64 {
-        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let u1 = ((*state >> 11) as f64 / (1u64 << 53) as f64).max(1e-15);
-        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let u2 = (*state >> 11) as f64 / (1u64 << 53) as f64;
         scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
     };
@@ -130,7 +134,10 @@ fn main() -> sheaf::Result<()> {
     let empirical_coverage = covered as f64 / n_calib as f64;
     println!();
     println!("Empirical joint coverage on calibration set:");
-    println!("  {covered}/{n_calib} = {empirical_coverage:.2} (target >= {:.2})", 1.0 - alpha);
+    println!(
+        "  {covered}/{n_calib} = {empirical_coverage:.2} (target >= {:.2})",
+        1.0 - alpha
+    );
 
     Ok(())
 }

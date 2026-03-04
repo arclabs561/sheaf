@@ -57,8 +57,8 @@
 //! - GraphRAG: Microsoft (2024). "From Local to Global: A Graph RAG Approach"
 
 use crate::{Error, Result};
-use vicinity::hnsw::{HNSWIndex, HNSWParams};
 use petgraph::graph::UnGraph;
+use vicinity::hnsw::{HNSWIndex, HNSWParams};
 
 /// Configuration for kNN graph construction.
 #[derive(Debug, Clone)]

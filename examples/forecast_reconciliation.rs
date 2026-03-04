@@ -58,7 +58,15 @@ fn main() -> sheaf::Result<()> {
     base[(5, 0)] = 55.0; // Shirts
     base[(6, 0)] = 45.0; // Pants
 
-    let names = ["Total", "Electronics", "Clothing", "Phones", "Laptops", "Shirts", "Pants"];
+    let names = [
+        "Total",
+        "Electronics",
+        "Clothing",
+        "Phones",
+        "Laptops",
+        "Shirts",
+        "Pants",
+    ];
 
     println!("Hierarchical Forecast Reconciliation");
     println!("====================================");
@@ -140,6 +148,10 @@ fn print_coherence_check(label: &str, names: &[&str], mat: &Mat<f64>) {
     let _ = names;
     println!(
         "  {label} coherence gap (Total vs leaf sum): {diff:.2e}{}",
-        if diff < 1e-8 { " [coherent]" } else { " [INCOHERENT]" }
+        if diff < 1e-8 {
+            " [coherent]"
+        } else {
+            " [INCOHERENT]"
+        }
     );
 }

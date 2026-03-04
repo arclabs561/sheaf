@@ -107,13 +107,9 @@ fn convert_error(e: clump::Error) -> Error {
         clump::Error::InvalidParameter { name, message } => {
             Error::InvalidParameter { name, message }
         }
-        clump::Error::InvalidClusterCount {
-            requested,
-            n_items,
-        } => Error::InvalidClusterCount {
-            requested,
-            n_items,
-        },
+        clump::Error::InvalidClusterCount { requested, n_items } => {
+            Error::InvalidClusterCount { requested, n_items }
+        }
         clump::Error::DimensionMismatch { expected, found } => {
             Error::DimensionMismatch { expected, found }
         }

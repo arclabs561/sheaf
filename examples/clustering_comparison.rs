@@ -24,9 +24,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Deterministic pseudo-random noise (LCG + Box-Muller).
     let mut lcg: u64 = 98765;
     let next_normal = |state: &mut u64| -> f64 {
-        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let u1 = ((*state >> 11) as f64 / (1u64 << 53) as f64).max(1e-15);
-        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let u2 = (*state >> 11) as f64 / (1u64 << 53) as f64;
         (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
     };
@@ -56,7 +60,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let km_labels = km.fit_predict(&data)?;
 
     // -- GMM --
-    let gmm = Gmm::new().with_n_components(k).with_seed(42).with_max_iter(200);
+    let gmm = Gmm::new()
+        .with_n_components(k)
+        .with_seed(42)
+        .with_max_iter(200);
     let gmm_probs = gmm.fit_predict_proba(&data)?;
     // Hard labels from soft assignments.
     let gmm_labels: Vec<usize> = gmm_probs
@@ -103,7 +110,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     ];
 
-    println!("{:<22} {:>8} {:>8} {:>8}", "algorithm", "ARI", "NMI", "purity");
+    println!(
+        "{:<22} {:>8} {:>8} {:>8}",
+        "algorithm", "ARI", "NMI", "purity"
+    );
     println!("{}", "-".repeat(50));
     for s in &scores {
         println!(
@@ -128,7 +138,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
             .collect();
         let avg: f64 = entropies.iter().sum::<f64>() / entropies.len() as f64;
-        println!("  cluster {cid}: avg entropy = {avg:.4} (0 = certain, ln({k}) = {:.4} = uniform)", (k as f64).ln());
+        println!(
+            "  cluster {cid}: avg entropy = {avg:.4} (0 = certain, ln({k}) = {:.4} = uniform)",
+            (k as f64).ln()
+        );
     }
 
     Ok(())
