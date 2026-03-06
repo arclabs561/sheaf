@@ -35,6 +35,29 @@ Used by [`flowmatch`](https://github.com/arclabs561/flowmatch) (behind `--featur
 - **Hierarchy + conformal**: hierarchical reconciliation, split conformal prediction with coherence guarantees.
 - **Metrics**: clustering evaluation helpers (used by `flowmatch` sheaf-eval examples).
 
+## Custom distance metrics
+
+K-means and DBSCAN accept a pluggable distance metric via `with_metric`. Built-in metrics
+re-exported from `clump`: `Euclidean`, `SquaredEuclidean`, `CosineDistance`, `InnerProductDistance`.
+Implement `DistanceMetric` for your own.
+
+```rust
+use sheaf::{Kmeans, CosineDistance};
+
+let km = Kmeans::with_metric(8, CosineDistance)
+    .with_seed(42)
+    .with_seeding_alpha(2.0); // oversampling factor for k-means++
+let result = km.fit(&data)?;
+```
+
+```rust
+use sheaf::cluster::{Dbscan, CosineDistance};
+
+// epsilon is compared against cosine distance (range [0, 2])
+let db = Dbscan::with_metric(0.3, 5, CosineDistance);
+let labels = db.fit(&data);
+```
+
 ## Usage
 
 ```toml

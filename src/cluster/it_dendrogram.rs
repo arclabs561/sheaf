@@ -105,14 +105,14 @@ impl Clustering for ItDendrogram {
         // Each root defines a cluster basin.
         // We trace paths up to roots.
         let mut labels = vec![0; n];
-        for i in 0..n {
+        for (i, label) in labels.iter_mut().enumerate().take(n) {
             let mut curr = i;
             // Path compression / traversal
             while let Some(p) = parent[curr] {
                 curr = p;
             }
             // `curr` is now a root. Map root ID to a cluster label 0..k
-            labels[i] = curr;
+            *label = curr;
         }
 
         // Remap labels to contiguous range 0..num_clusters

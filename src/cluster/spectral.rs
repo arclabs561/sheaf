@@ -152,8 +152,10 @@ impl SpectralClustering {
         // Delegate spectral embedding to `lapl` (single source of truth for Laplacian + eigensolver policy).
         // Spectral clustering typically uses the first k eigenvectors (Ng–Jordan–Weiss),
         // then row-normalizes. Keeping the constant eigenvector improves stability here.
-        let mut cfg = SpectralEmbeddingConfig::default();
-        cfg.skip_first = false;
+        let cfg = SpectralEmbeddingConfig {
+            skip_first: false,
+            ..SpectralEmbeddingConfig::default()
+        };
         let embedding = spectral_embedding(&affinity, self.k, &cfg)
             .map_err(|e| Error::Other(format!("lapl spectral_embedding failed: {e}")))?;
 
@@ -174,8 +176,10 @@ impl SpectralClustering {
             });
         }
 
-        let mut cfg = SpectralEmbeddingConfig::default();
-        cfg.skip_first = false;
+        let cfg = SpectralEmbeddingConfig {
+            skip_first: false,
+            ..SpectralEmbeddingConfig::default()
+        };
         let embedding = spectral_embedding(affinity, self.k, &cfg)
             .map_err(|e| Error::Other(format!("lapl spectral_embedding failed: {e}")))?;
         self.kmeans_on_embedding(&embedding)
@@ -260,7 +264,9 @@ impl SpectralClustering {
             }
         }
 
-        Ok(best.expect("n>0 implies at least one kmeans run").1)
+        best.map(|(_, labels)| labels).ok_or_else(|| {
+            Error::Other("n>0 implies at least one kmeans run but best was None".into())
+        })
     }
 }
 
