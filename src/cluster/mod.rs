@@ -117,5 +117,11 @@ pub use kmeans::Kmeans;
 pub use kmeans_elkan::{ElkanStats, KmeansElkan};
 pub use traits::{Clustering, SoftClustering};
 
+// Re-export distance metric types from clump so users don't need a direct
+// clump dependency to select a metric.
+pub use clump::cluster::distance::{
+    CosineDistance, DistanceMetric, Euclidean, InnerProductDistance, SquaredEuclidean,
+};
+
 #[cfg(feature = "spectral")]
 pub use spectral::{AffinityType, SpectralClustering};

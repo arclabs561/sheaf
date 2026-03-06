@@ -48,10 +48,22 @@ use super::traits::Clustering;
 use crate::error::{Error, Result};
 use clump::cluster::Clustering as _;
 use clump::cluster::Kmeans as ClumpKmeans;
+use clump::DistanceMetric;
 
-/// K-means clustering algorithm.
+/// K-means clustering algorithm, generic over a distance metric.
+///
+/// The default metric is [`clump::SquaredEuclidean`], preserving backward
+/// compatibility: `Kmeans::new(k)` works exactly as before.
+///
+/// To use a different metric, construct via [`Kmeans::with_metric`]:
+///
+/// ```rust
+/// use sheaf::cluster::{Kmeans, CosineDistance};
+///
+/// let km = Kmeans::with_metric(8, CosineDistance).with_seed(42);
+/// ```
 #[derive(Debug, Clone)]
-pub struct Kmeans {
+pub struct Kmeans<D: DistanceMetric = clump::SquaredEuclidean> {
     /// Number of clusters.
     k: usize,
     /// Maximum iterations.
@@ -60,16 +72,37 @@ pub struct Kmeans {
     tol: f64,
     /// Random seed.
     seed: Option<u64>,
+    /// Seeding alpha (exponent for k-means++ probability weighting).
+    /// Standard k-means++ uses alpha=2.0 (D-squared weighting).
+    seeding_alpha: Option<f32>,
+    /// Distance metric.
+    metric: D,
 }
 
-impl Kmeans {
-    /// Create a new K-means clusterer.
+impl Kmeans<clump::SquaredEuclidean> {
+    /// Create a new K-means clusterer with the default squared Euclidean distance.
     pub fn new(k: usize) -> Self {
         Self {
             k,
             max_iter: 100,
             tol: 1e-4,
             seed: None,
+            seeding_alpha: None,
+            metric: clump::SquaredEuclidean,
+        }
+    }
+}
+
+impl<D: DistanceMetric> Kmeans<D> {
+    /// Create a new K-means clusterer with a custom distance metric.
+    pub fn with_metric(k: usize, metric: D) -> Self {
+        Self {
+            k,
+            max_iter: 100,
+            tol: 1e-4,
+            seed: None,
+            seeding_alpha: None,
+            metric,
         }
     }
 
@@ -90,15 +123,28 @@ impl Kmeans {
         self.seed = Some(seed);
         self
     }
+
+    /// Set seeding alpha (exponent for k-means++ probability weighting).
+    ///
+    /// Standard k-means++ uses alpha=2.0 (D-squared weighting).
+    /// Research (Bamas et al. 2023) suggests alpha > 2 (e.g. 4.0) can
+    /// yield better final clustering cost.
+    pub fn with_seeding_alpha(mut self, alpha: f32) -> Self {
+        self.seeding_alpha = Some(alpha);
+        self
+    }
 }
 
-impl Clustering for Kmeans {
+impl<D: DistanceMetric> Clustering for Kmeans<D> {
     fn fit_predict(&self, data: &[Vec<f32>]) -> Result<Vec<usize>> {
-        let mut km = ClumpKmeans::new(self.k)
+        let mut km = ClumpKmeans::with_metric(self.k, self.metric.clone())
             .with_max_iter(self.max_iter)
             .with_tol(self.tol);
         if let Some(seed) = self.seed {
             km = km.with_seed(seed);
+        }
+        if let Some(alpha) = self.seeding_alpha {
+            km = km.with_seeding_alpha(alpha);
         }
 
         km.fit_predict(data).map_err(map_clump_error)

@@ -36,7 +36,10 @@ pub use metrics::{ari, completeness, fowlkes_mallows, homogeneity, nmi, purity, 
 pub use distribution_distance::{DistributionDistance, DistributionDistanceConfig};
 
 #[cfg(feature = "cluster")]
-pub use cluster::{Clustering, Gmm, HierarchicalClustering, Kmeans, Linkage, SoftClustering};
+pub use cluster::{
+    Clustering, CosineDistance, DistanceMetric, Euclidean, Gmm, HierarchicalClustering,
+    InnerProductDistance, Kmeans, Linkage, SoftClustering, SquaredEuclidean,
+};
 
 #[cfg(feature = "community")]
 pub use community::{CommunityDetection, LabelPropagation, Leiden, Louvain};

@@ -7,14 +7,22 @@
 
 use super::traits::Clustering;
 use crate::error::{Error, Result};
+use clump::DistanceMetric;
 
 /// Re-export the noise sentinel from clump.
 pub use clump::NOISE;
 
-/// DBSCAN clustering algorithm.
+/// DBSCAN clustering algorithm, generic over a distance metric.
 ///
 /// Delegates to [`clump::Dbscan`] for the actual computation. See the
 /// [clump docs](https://docs.rs/clump) for algorithm details (Ester et al., 1996).
+///
+/// The default metric is [`clump::Euclidean`] (L2), matching the original
+/// behavior where epsilon is compared against Euclidean distance.
+///
+/// When using a different metric, epsilon semantics change accordingly:
+/// - [`clump::SquaredEuclidean`]: epsilon is compared against squared distance.
+/// - [`clump::CosineDistance`]: epsilon is compared against cosine distance (range `[0, 2]`).
 ///
 /// # Core Concepts
 ///
@@ -22,14 +30,14 @@ pub use clump::NOISE;
 /// - **MinPts**: Minimum neighbors within ε for a point to be "core".
 /// - **Core point**: Has at least MinPts neighbors within ε.
 /// - **Border point**: Within ε of a core point but not core itself.
-/// - **Noise point**: Neither core nor border — labeled with [`NOISE`] sentinel.
+/// - **Noise point**: Neither core nor border -- labeled with [`NOISE`] sentinel.
 #[derive(Debug, Clone)]
-pub struct Dbscan {
-    inner: clump::Dbscan,
+pub struct Dbscan<D: DistanceMetric = clump::Euclidean> {
+    inner: clump::Dbscan<D>,
 }
 
-impl Dbscan {
-    /// Create a new DBSCAN clusterer.
+impl Dbscan<clump::Euclidean> {
+    /// Create a new DBSCAN clusterer with the default Euclidean distance.
     ///
     /// # Arguments
     ///
@@ -43,6 +51,19 @@ impl Dbscan {
     pub fn new(epsilon: f32, min_pts: usize) -> Self {
         Self {
             inner: clump::Dbscan::new(epsilon, min_pts),
+        }
+    }
+}
+
+impl<D: DistanceMetric> Dbscan<D> {
+    /// Create a new DBSCAN clusterer with a custom distance metric.
+    ///
+    /// **Note**: epsilon semantics change with the metric. For example,
+    /// with [`clump::SquaredEuclidean`], epsilon is compared against squared
+    /// distances rather than raw Euclidean distances.
+    pub fn with_metric(epsilon: f32, min_pts: usize, metric: D) -> Self {
+        Self {
+            inner: clump::Dbscan::with_metric(epsilon, min_pts, metric),
         }
     }
 
@@ -64,7 +85,7 @@ impl Dbscan {
     }
 }
 
-impl Default for Dbscan {
+impl Default for Dbscan<clump::Euclidean> {
     fn default() -> Self {
         Self {
             inner: clump::Dbscan::default(),
@@ -72,7 +93,7 @@ impl Default for Dbscan {
     }
 }
 
-impl Clustering for Dbscan {
+impl<D: DistanceMetric> Clustering for Dbscan<D> {
     fn fit_predict(&self, data: &[Vec<f32>]) -> Result<Vec<usize>> {
         clump::Clustering::fit_predict(&self.inner, data).map_err(convert_error)
     }
@@ -94,7 +115,7 @@ pub trait DbscanExt {
     }
 }
 
-impl DbscanExt for Dbscan {
+impl<D: DistanceMetric> DbscanExt for Dbscan<D> {
     fn fit_predict_with_noise(&self, data: &[Vec<f32>]) -> Result<Vec<Option<usize>>> {
         clump::DbscanExt::fit_predict_with_noise(&self.inner, data).map_err(convert_error)
     }
@@ -207,7 +228,7 @@ mod tests {
 
         assert_eq!(labels.len(), 9);
         assert_eq!(labels[4], NOISE);
-        assert!(Dbscan::is_noise(labels[4]));
+        assert!(Dbscan::<clump::Euclidean>::is_noise(labels[4]));
     }
 
     #[test]
