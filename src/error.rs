@@ -49,6 +49,8 @@ pub enum Error {
     },
     /// Graph is disconnected where connected was required.
     DisconnectedGraph,
+    /// Pairwise constraint cannot be satisfied.
+    ConstraintViolation(String),
     /// Generic error with message.
     Other(String),
 }
@@ -74,6 +76,7 @@ impl fmt::Display for Error {
                 write!(f, "invalid parameter '{name}': {message}")
             }
             Error::DisconnectedGraph => write!(f, "graph is disconnected"),
+            Error::ConstraintViolation(msg) => write!(f, "constraint violation: {msg}"),
             Error::Other(msg) => write!(f, "{msg}"),
         }
     }

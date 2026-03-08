@@ -120,8 +120,15 @@ pub use traits::{Clustering, SoftClustering};
 // Re-export distance metric types from clump so users don't need a direct
 // clump dependency to select a metric.
 pub use clump::cluster::distance::{
-    CosineDistance, DistanceMetric, Euclidean, InnerProductDistance, SquaredEuclidean,
+    CompositeDistance, CosineDistance, DistanceMetric, Euclidean, InnerProductDistance,
+    SquaredEuclidean,
 };
+
+// Constrained clustering (COP-Kmeans, Wagstaff et al. 2001).
+pub use clump::cluster::constrained::{ConstrainedClustering, Constraint, CopKmeans};
+
+// Streaming/online clustering (Mini-Batch K-means, Sculley 2010).
+pub use clump::cluster::streaming::{MiniBatchKmeans, StreamingClustering};
 
 #[cfg(feature = "spectral")]
 pub use spectral::{AffinityType, SpectralClustering};

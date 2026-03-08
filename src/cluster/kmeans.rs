@@ -167,6 +167,7 @@ fn map_clump_error(e: clump::Error) -> Error {
         clump::Error::DimensionMismatch { expected, found } => {
             Error::DimensionMismatch { expected, found }
         }
+        clump::Error::ConstraintViolation(msg) => Error::ConstraintViolation(msg),
         clump::Error::Other(msg) => Error::Other(msg),
     }
 }
