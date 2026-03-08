@@ -147,28 +147,11 @@ impl<D: DistanceMetric> Clustering for Kmeans<D> {
             km = km.with_seeding_alpha(alpha);
         }
 
-        km.fit_predict(data).map_err(map_clump_error)
+        km.fit_predict(data).map_err(Error::from)
     }
 
     fn n_clusters(&self) -> usize {
         self.k
-    }
-}
-
-fn map_clump_error(e: clump::Error) -> Error {
-    match e {
-        clump::Error::EmptyInput => Error::EmptyInput,
-        clump::Error::InvalidParameter { name, message } => {
-            Error::InvalidParameter { name, message }
-        }
-        clump::Error::InvalidClusterCount { requested, n_items } => {
-            Error::InvalidClusterCount { requested, n_items }
-        }
-        clump::Error::DimensionMismatch { expected, found } => {
-            Error::DimensionMismatch { expected, found }
-        }
-        clump::Error::ConstraintViolation(msg) => Error::ConstraintViolation(msg),
-        clump::Error::Other(msg) => Error::Other(msg),
     }
 }
 

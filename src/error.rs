@@ -84,3 +84,23 @@ impl fmt::Display for Error {
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
+
+#[cfg(feature = "cluster")]
+impl From<clump::Error> for Error {
+    fn from(e: clump::Error) -> Self {
+        match e {
+            clump::Error::EmptyInput => Error::EmptyInput,
+            clump::Error::InvalidParameter { name, message } => {
+                Error::InvalidParameter { name, message }
+            }
+            clump::Error::InvalidClusterCount { requested, n_items } => {
+                Error::InvalidClusterCount { requested, n_items }
+            }
+            clump::Error::DimensionMismatch { expected, found } => {
+                Error::DimensionMismatch { expected, found }
+            }
+            clump::Error::ConstraintViolation(msg) => Error::ConstraintViolation(msg),
+            clump::Error::Other(msg) => Error::Other(msg),
+        }
+    }
+}

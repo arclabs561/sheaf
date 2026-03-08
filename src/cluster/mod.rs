@@ -127,8 +127,12 @@ pub use clump::cluster::distance::{
 // Constrained clustering (COP-Kmeans, Wagstaff et al. 2001).
 pub use clump::cluster::constrained::{ConstrainedClustering, Constraint, CopKmeans};
 
-// Streaming/online clustering (Mini-Batch K-means, Sculley 2010).
+// Streaming/online clustering (Mini-Batch K-means, Sculley 2010; DenStream, Cao et al. 2006).
+pub use clump::cluster::denstream::DenStream;
 pub use clump::cluster::streaming::{MiniBatchKmeans, StreamingClustering};
+
+// Correlation clustering (Bansal et al. 2004) -- no k required.
+pub use clump::cluster::correlation::{CorrelationClustering, CorrelationResult, SignedEdge};
 
 #[cfg(feature = "spectral")]
 pub use spectral::{AffinityType, SpectralClustering};

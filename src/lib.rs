@@ -37,9 +37,10 @@ pub use distribution_distance::{DistributionDistance, DistributionDistanceConfig
 
 #[cfg(feature = "cluster")]
 pub use cluster::{
-    Clustering, CompositeDistance, ConstrainedClustering, Constraint, CopKmeans, CosineDistance,
-    DistanceMetric, Euclidean, Gmm, HierarchicalClustering, InnerProductDistance, Kmeans, Linkage,
-    MiniBatchKmeans, SoftClustering, SquaredEuclidean, StreamingClustering,
+    Clustering, CompositeDistance, ConstrainedClustering, Constraint, CopKmeans,
+    CorrelationClustering, CorrelationResult, CosineDistance, DenStream, DistanceMetric, Euclidean,
+    Gmm, HierarchicalClustering, InnerProductDistance, Kmeans, Linkage, MiniBatchKmeans,
+    SignedEdge, SoftClustering, SquaredEuclidean, StreamingClustering,
 };
 
 #[cfg(feature = "community")]

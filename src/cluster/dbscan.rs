@@ -95,7 +95,7 @@ impl Default for Dbscan<clump::Euclidean> {
 
 impl<D: DistanceMetric> Clustering for Dbscan<D> {
     fn fit_predict(&self, data: &[Vec<f32>]) -> Result<Vec<usize>> {
-        clump::Clustering::fit_predict(&self.inner, data).map_err(convert_error)
+        clump::Clustering::fit_predict(&self.inner, data).map_err(Error::from)
     }
 
     /// DBSCAN discovers clusters dynamically, so this returns 0.
@@ -117,25 +117,7 @@ pub trait DbscanExt {
 
 impl<D: DistanceMetric> DbscanExt for Dbscan<D> {
     fn fit_predict_with_noise(&self, data: &[Vec<f32>]) -> Result<Vec<Option<usize>>> {
-        clump::DbscanExt::fit_predict_with_noise(&self.inner, data).map_err(convert_error)
-    }
-}
-
-/// Convert a [`clump::Error`] into a [`sheaf::Error`](Error).
-fn convert_error(e: clump::Error) -> Error {
-    match e {
-        clump::Error::EmptyInput => Error::EmptyInput,
-        clump::Error::InvalidParameter { name, message } => {
-            Error::InvalidParameter { name, message }
-        }
-        clump::Error::InvalidClusterCount { requested, n_items } => {
-            Error::InvalidClusterCount { requested, n_items }
-        }
-        clump::Error::DimensionMismatch { expected, found } => {
-            Error::DimensionMismatch { expected, found }
-        }
-        clump::Error::ConstraintViolation(msg) => Error::ConstraintViolation(msg),
-        clump::Error::Other(msg) => Error::Other(msg),
+        clump::DbscanExt::fit_predict_with_noise(&self.inner, data).map_err(Error::from)
     }
 }
 
