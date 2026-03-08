@@ -1,6 +1,6 @@
 [package]
 name = "sheaf"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
@@ -20,7 +20,7 @@ rand = { version = "0.9", optional = true }
 rand_distr = { version = "0.5", optional = true }
 faer = "0.19"
 ndarray-linalg = { version = "0.16", optional = true }
-clump = { version = "0.2.0", optional = true }
+clump = { version = "0.3.0", optional = true }
 
 # Hierarchical clustering
 kodama = { version = "0.3", optional = true }
@@ -45,7 +45,7 @@ lapl = { version = "0.1.0", optional = true }
 rkhs = { version = "0.1.0", optional = true }
 
 # Distribution distances (ecosystem crate)
-wass = { version = "0.1.1", optional = true }
+wass = { version = "0.1", optional = true }
 
 # Optional stochastic sampling
 kuji = { version = "0.1.0", optional = true }
