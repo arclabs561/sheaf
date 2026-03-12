@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //\! # sheaf
 //!
 //! Hierarchical abstraction: tree structures + reconciliation / conformal primitives for multi-resolution views.
