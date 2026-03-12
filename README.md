@@ -62,7 +62,7 @@ let labels = db.fit(&data);
 
 ```toml
 [dependencies]
-sheaf = "0.1.1"
+sheaf = "0.1.3"
 ```
 
 ```rust
