@@ -46,7 +46,6 @@
 
 use super::traits::Clustering;
 use crate::error::{Error, Result};
-use clump::cluster::Clustering as _;
 use clump::cluster::Kmeans as ClumpKmeans;
 use clump::DistanceMetric;
 

@@ -95,7 +95,7 @@ impl Default for Dbscan<clump::Euclidean> {
 
 impl<D: DistanceMetric> Clustering for Dbscan<D> {
     fn fit_predict(&self, data: &[Vec<f32>]) -> Result<Vec<usize>> {
-        clump::Clustering::fit_predict(&self.inner, data).map_err(Error::from)
+        self.inner.fit_predict(data).map_err(Error::from)
     }
 
     /// DBSCAN discovers clusters dynamically, so this returns 0.
@@ -117,7 +117,7 @@ pub trait DbscanExt {
 
 impl<D: DistanceMetric> DbscanExt for Dbscan<D> {
     fn fit_predict_with_noise(&self, data: &[Vec<f32>]) -> Result<Vec<Option<usize>>> {
-        clump::DbscanExt::fit_predict_with_noise(&self.inner, data).map_err(Error::from)
+        self.inner.fit_predict_with_noise(data).map_err(Error::from)
     }
 }
 
