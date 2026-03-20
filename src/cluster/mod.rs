@@ -134,5 +134,8 @@ pub use clump::cluster::streaming::MiniBatchKmeans;
 // Correlation clustering (Bansal et al. 2004) -- no k required.
 pub use clump::cluster::correlation::{CorrelationClustering, CorrelationResult, SignedEdge};
 
+// Data input abstractions (zero-copy flat buffer, ndarray views).
+pub use clump::cluster::flat::{DataRef, FlatRef};
+
 #[cfg(feature = "spectral")]
 pub use spectral::{AffinityType, SpectralClustering};
