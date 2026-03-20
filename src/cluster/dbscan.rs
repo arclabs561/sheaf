@@ -259,16 +259,10 @@ mod tests {
 
     #[test]
     fn test_dbscan_invalid_params() {
-        let data = vec![vec![0.0, 0.0]];
-
-        let dbscan = Dbscan::new(0.0, 3);
-        assert!(dbscan.fit_predict(&data).is_err());
-
-        let dbscan = Dbscan::new(-1.0, 3);
-        assert!(dbscan.fit_predict(&data).is_err());
-
-        let dbscan = Dbscan::new(0.5, 0);
-        assert!(dbscan.fit_predict(&data).is_err());
+        // clump panics on invalid constructor params (assert!, not Result).
+        assert!(std::panic::catch_unwind(|| Dbscan::new(0.0, 3)).is_err());
+        assert!(std::panic::catch_unwind(|| Dbscan::new(-1.0, 3)).is_err());
+        assert!(std::panic::catch_unwind(|| Dbscan::new(0.5, 0)).is_err());
     }
 
     #[test]
