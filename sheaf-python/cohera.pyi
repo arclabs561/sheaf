@@ -1,51 +1,205 @@
+from typing import Sequence
+
+import numpy as np
+import numpy.typing as npt
+
 def reconcile(
-    summing_matrix: list[list[float]],
-    base_forecasts: list[float],
+    summing_matrix: npt.NDArray[np.float64] | list[list[float]],
+    base_forecasts: npt.NDArray[np.float64] | list[float],
     method: str = "ols",
     weights: list[float] | None = None,
-    covariance: list[list[float]] | None = None,
-) -> list[float]: ...
+    covariance: npt.NDArray[np.float64] | list[list[float]] | None = None,
+) -> npt.NDArray[np.float64]:
+    """Reconcile base forecasts to satisfy hierarchical constraints.
 
-def simple_star_matrix(n_leaves: int) -> list[list[float]]: ...
+    Args:
+        summing_matrix: 2D array (m x n) defining the hierarchy.
+        base_forecasts: 1D array (m,) of incoherent base forecasts.
+        method: "ols", "wls", or "mint".
+        weights: Diagonal weights for "wls" (m,).
+        covariance: Covariance matrix for "mint" (m x m).
+
+    Returns:
+        Reconciled forecasts as a 1D numpy array (m,).
+    """
+    ...
+
+def simple_star_matrix(n_leaves: int) -> npt.NDArray[np.float64]:
+    """Build a summing matrix for a 2-level hierarchy (1 root + n leaves).
+
+    Args:
+        n_leaves: Number of leaf nodes.
+
+    Returns:
+        Summing matrix with shape (n_leaves + 1, n_leaves).
+    """
+    ...
 
 class HierarchicalConformal:
+    """Hierarchical conformal predictor.
+
+    Wraps reconciliation with split-conformal calibration to produce
+    prediction intervals that respect the hierarchy.
+    """
+
     def __init__(
         self,
-        summing_matrix: list[list[float]],
+        summing_matrix: npt.NDArray[np.float64] | list[list[float]],
         method: str = "ols",
     ) -> None: ...
     def calibrate(
         self,
-        y_calib: list[list[float]],
-        y_hat_calib: list[list[float]],
+        y_calib: npt.NDArray[np.float64] | list[list[float]],
+        y_hat_calib: npt.NDArray[np.float64] | list[list[float]],
         alpha: float,
-    ) -> None: ...
+    ) -> None:
+        """Calibrate using held-out data.
+
+        Args:
+            y_calib: True values, shape (m, n_calib).
+            y_hat_calib: Base forecasts, shape (m, n_calib).
+            alpha: Miscoverage level (e.g. 0.1 for 90% coverage).
+        """
+        ...
     def predict(
-        self, y_hat: list[float]
-    ) -> tuple[list[float], list[float]]: ...
+        self,
+        y_hat: npt.NDArray[np.float64] | list[float],
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Predict reconciled intervals for new base forecasts.
+
+        Args:
+            y_hat: Base forecast vector (m,).
+
+        Returns:
+            (lower, upper) bounds, each a 1D numpy array (m,).
+        """
+        ...
+    def __repr__(self) -> str: ...
 
 def leiden(
     edges: list[tuple[int, int, float]],
     n_nodes: int,
     resolution: float = 1.0,
     seed: int | None = None,
-) -> list[int]: ...
+) -> npt.NDArray[np.int64]:
+    """Leiden community detection on a weighted undirected graph.
+
+    Args:
+        edges: Edge list as [(source, target, weight), ...].
+        n_nodes: Total number of nodes.
+        resolution: Modularity resolution (default 1.0).
+        seed: Random seed for reproducibility.
+
+    Returns:
+        Community assignment for each node, dtype int64.
+    """
+    ...
 
 def louvain(
     edges: list[tuple[int, int, float]],
     n_nodes: int,
     resolution: float = 1.0,
-) -> list[int]: ...
+) -> npt.NDArray[np.int64]:
+    """Louvain community detection on a weighted undirected graph.
+
+    Args:
+        edges: Edge list as [(source, target, weight), ...].
+        n_nodes: Total number of nodes.
+        resolution: Modularity resolution (default 1.0).
+
+    Returns:
+        Community assignment for each node, dtype int64.
+    """
+    ...
 
 def label_propagation(
     edges: list[tuple[int, int, float]],
     n_nodes: int,
-) -> list[int]: ...
+) -> npt.NDArray[np.int64]:
+    """Label propagation community detection.
 
-def nmi(labels_a: list[int], labels_b: list[int]) -> float: ...
-def ari(labels_a: list[int], labels_b: list[int]) -> float: ...
-def v_measure(labels_a: list[int], labels_b: list[int]) -> float: ...
-def purity(labels_a: list[int], labels_b: list[int]) -> float: ...
-def homogeneity(labels_a: list[int], labels_b: list[int]) -> float: ...
-def completeness(labels_a: list[int], labels_b: list[int]) -> float: ...
-def fowlkes_mallows(labels_a: list[int], labels_b: list[int]) -> float: ...
+    Args:
+        edges: Edge list as [(source, target, weight), ...].
+        n_nodes: Total number of nodes.
+
+    Returns:
+        Community assignment for each node, dtype int64.
+    """
+    ...
+
+def nmi(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Normalized Mutual Information between two clusterings.
+
+    Returns:
+        NMI in [0, 1]. 1.0 means identical clusterings.
+    """
+    ...
+
+def ari(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Adjusted Rand Index between two clusterings.
+
+    Returns:
+        ARI in [-1, 1]. 1.0 means identical, 0.0 means random.
+    """
+    ...
+
+def v_measure(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """V-Measure: harmonic mean of homogeneity and completeness.
+
+    Returns:
+        V-measure in [0, 1].
+    """
+    ...
+
+def purity(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Purity of clustering with respect to ground truth.
+
+    Returns:
+        Purity in [0, 1].
+    """
+    ...
+
+def homogeneity(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Homogeneity: each cluster contains only members of a single class.
+
+    Returns:
+        Homogeneity in [0, 1].
+    """
+    ...
+
+def completeness(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Completeness: all members of a class are in the same cluster.
+
+    Returns:
+        Completeness in [0, 1].
+    """
+    ...
+
+def fowlkes_mallows(
+    labels_a: npt.NDArray[np.integer] | Sequence[int],
+    labels_b: npt.NDArray[np.integer] | Sequence[int],
+) -> float:
+    """Fowlkes-Mallows Index: geometric mean of pairwise precision and recall.
+
+    Returns:
+        FMI in [0, 1]. 1.0 means identical clusterings.
+    """
+    ...
