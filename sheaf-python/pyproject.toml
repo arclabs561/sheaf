@@ -1,0 +1,49 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "cohera"
+version = "0.1.0"
+description = "Hierarchical coherence: forecast reconciliation (OLS, WLS, MinTrace), conformal prediction, community detection (Leiden, Louvain)."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT OR Apache-2.0" }
+authors = [{ name = "Arc", email = "attobop@gmail.com" }]
+keywords = ["hierarchical", "reconciliation", "conformal-prediction", "leiden", "community-detection"]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/arclabs561/sheaf"
+Documentation = "https://docs.rs/sheaf"
+Repository = "https://github.com/arclabs561/sheaf"
+
+[tool.maturin]
+module-name = "cohera"
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "../Cargo.toml" },
+    { file = "../src/**/*.rs" },
+    { file = "src/**/*.rs" },
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.4",
+    "pytest-cov>=4.0.0",
+    "mypy>=1.0.0",
+]
