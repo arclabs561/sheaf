@@ -1,0 +1,25 @@
+[package]
+name = "sheaf-python"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT OR Apache-2.0"
+authors = ["Arc <attobop@gmail.com>"]
+description = "Python bindings for sheaf (Rust)."
+repository = "https://github.com/arclabs561/sheaf"
+readme = "README.md"
+publish = false
+
+[lib]
+name = "cohera"
+crate-type = ["cdylib"]
+doc = false
+
+[dependencies]
+sheaf = { path = "..", features = ["cluster", "community", "metrics"] }
+pyo3 = "0.28"
+faer = "0.19"
+petgraph = "0.6"
+
+[workspace]
+resolver = "2"
