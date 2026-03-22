@@ -1,12 +1,14 @@
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 import numpy.typing as npt
 
+__version__: str
+
 def reconcile(
     summing_matrix: npt.NDArray[np.float64] | list[list[float]],
     base_forecasts: npt.NDArray[np.float64] | list[float],
-    method: str = "ols",
+    method: Literal["ols", "wls", "mint"] = "ols",
     weights: list[float] | None = None,
     covariance: npt.NDArray[np.float64] | list[list[float]] | None = None,
 ) -> npt.NDArray[np.float64]:
@@ -45,7 +47,7 @@ class HierarchicalConformal:
     def __init__(
         self,
         summing_matrix: npt.NDArray[np.float64] | list[list[float]],
-        method: str = "ols",
+        method: Literal["ols", "wls", "mint"] = "ols",
     ) -> None: ...
     def calibrate(
         self,
@@ -128,8 +130,8 @@ def label_propagation(
     ...
 
 def nmi(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Normalized Mutual Information between two clusterings.
 
@@ -139,8 +141,8 @@ def nmi(
     ...
 
 def ari(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Adjusted Rand Index between two clusterings.
 
@@ -150,8 +152,8 @@ def ari(
     ...
 
 def v_measure(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """V-Measure: harmonic mean of homogeneity and completeness.
 
@@ -161,8 +163,8 @@ def v_measure(
     ...
 
 def purity(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Purity of clustering with respect to ground truth.
 
@@ -172,8 +174,8 @@ def purity(
     ...
 
 def homogeneity(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Homogeneity: each cluster contains only members of a single class.
 
@@ -183,8 +185,8 @@ def homogeneity(
     ...
 
 def completeness(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Completeness: all members of a class are in the same cluster.
 
@@ -194,8 +196,8 @@ def completeness(
     ...
 
 def fowlkes_mallows(
-    labels_a: npt.NDArray[np.integer] | Sequence[int],
-    labels_b: npt.NDArray[np.integer] | Sequence[int],
+    labels_true: npt.NDArray[np.integer] | Sequence[int],
+    labels_pred: npt.NDArray[np.integer] | Sequence[int],
 ) -> float:
     """Fowlkes-Mallows Index: geometric mean of pairwise precision and recall.
 
