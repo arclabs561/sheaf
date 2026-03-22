@@ -434,3 +434,30 @@ def test_summing_matrix_from_tree_reconcile():
     assert abs(result[4] - (result[0] + result[1])) < 1e-8
     assert abs(result[5] - (result[2] + result[3])) < 1e-8
     assert abs(result[6] - sum(result[:4])) < 1e-8
+
+
+# ---------------------------------------------------------------------------
+# Bug-fix regression tests
+# ---------------------------------------------------------------------------
+
+
+def test_cohera_predict_without_calibrate_raises():
+    """predict() before calibrate() must raise RuntimeError."""
+    s = cohera.simple_star_matrix(3)
+    hc = cohera.HierarchicalConformal(s)
+    with pytest.raises(RuntimeError, match="must call calibrate"):
+        hc.predict([1.0, 2.0, 3.0, 4.0])
+
+
+def test_cohera_negative_labels_rejected():
+    """Negative label values (e.g. -1 from noise) must raise ValueError."""
+    labels_with_noise = np.array([0, 1, -1, 0], dtype=np.int64)
+    with pytest.raises(ValueError, match="negative label"):
+        cohera.nmi(labels_with_noise, np.array([0, 1, 0, 0], dtype=np.int64))
+
+
+def test_cohera_edge_out_of_bounds_raises():
+    """Edge indices exceeding n_nodes must raise ValueError."""
+    edges = [(0, 5, 1.0)]  # node 5 exceeds n_nodes=3
+    with pytest.raises(ValueError, match="exceeds n_nodes"):
+        cohera.leiden(edges, n_nodes=3)
