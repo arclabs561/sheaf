@@ -37,6 +37,79 @@ def simple_star_matrix(n_leaves: int) -> npt.NDArray[np.float64]:
     """
     ...
 
+def summing_matrix_from_tree(
+    merges: list[tuple[int, int, float, int]],
+    n_leaves: int,
+) -> npt.NDArray[np.float64]:
+    """Build a summing matrix from a dendrogram-style merge history.
+
+    Each merge (cluster_a, cluster_b, height, size) creates an internal
+    node. The resulting matrix has shape (n_leaves + len(merges), n_leaves).
+
+    Args:
+        merges: List of (cluster_a, cluster_b, height, size) merge operations.
+        n_leaves: Number of leaf (bottom-level) nodes.
+
+    Returns:
+        Summing matrix as a 2D numpy array.
+    """
+    ...
+
+class Dendrogram:
+    """Dendrogram from hierarchical clustering merge history.
+
+    Supports cutting at a distance threshold or to a target number of clusters.
+    """
+
+    def __init__(
+        self,
+        merges: list[tuple[int, int, float, int]],
+        n_items: int,
+    ) -> None: ...
+
+    def cut_at_distance(self, threshold: float) -> npt.NDArray[np.int64]:
+        """Cut at a distance threshold.
+
+        Args:
+            threshold: Distance threshold for cutting.
+
+        Returns:
+            Cluster label for each item, dtype int64.
+        """
+        ...
+
+    def cut_to_k(self, k: int) -> npt.NDArray[np.int64]:
+        """Cut to produce exactly k clusters.
+
+        Args:
+            k: Desired number of clusters.
+
+        Returns:
+            Cluster label for each item, dtype int64.
+        """
+        ...
+
+    def distances(self) -> npt.NDArray[np.float64]:
+        """Merge distances in order.
+
+        Returns:
+            Distance at each merge step, dtype float64.
+        """
+        ...
+
+    @property
+    def n_items(self) -> int:
+        """Number of original (leaf) items."""
+        ...
+
+    @property
+    def n_merges(self) -> int:
+        """Number of merge operations recorded."""
+        ...
+
+    def __len__(self) -> int: ...
+    def __repr__(self) -> str: ...
+
 class HierarchicalConformal:
     """Hierarchical conformal predictor.
 
@@ -126,6 +199,25 @@ def label_propagation(
 
     Returns:
         Community assignment for each node, dtype int64.
+    """
+    ...
+
+def knn_graph(
+    embeddings: npt.NDArray[np.float32] | npt.NDArray[np.float64] | list[list[float]],
+    k: int = 10,
+) -> list[tuple[int, int, float]]:
+    """Build a k-nearest-neighbor graph from embeddings.
+
+    Uses HNSW for approximate nearest neighbor search. The resulting edge
+    list can be passed directly to leiden/louvain/label_propagation.
+
+    Args:
+        embeddings: 2D array of shape (n, dim). Each row is an embedding.
+        k: Number of neighbors per node (default 10).
+
+    Returns:
+        Edge list as [(source, target, weight), ...]. Weights are similarity
+        scores (higher = more similar).
     """
     ...
 
