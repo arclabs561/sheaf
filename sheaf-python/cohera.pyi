@@ -1,3 +1,10 @@
+"""Type stubs for cohera -- Python bindings to the sheaf Rust crate.
+
+Numeric data (embeddings, matrices) is processed in float32 internally
+where noted. Float64 inputs are converted, which may affect precision
+beyond ~7 significant digits. Reconciliation operates in float64.
+"""
+
 from typing import Literal, Sequence
 
 import numpy as np
