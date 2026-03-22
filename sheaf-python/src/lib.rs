@@ -180,8 +180,16 @@ fn extract_labels(obj: &Bound<'_, pyo3::PyAny>) -> PyResult<Vec<usize>> {
     if let Ok(arr) = obj.extract::<PyReadonlyArray1<'_, u64>>() {
         return Ok(arr.as_array().iter().map(|&v| v as usize).collect());
     }
-    // Fall back to list
-    obj.extract::<Vec<usize>>()
+    // Fall back to list -- extract as i64 to handle negative values gracefully
+    let vals: Vec<i64> = obj.extract()?;
+    for &v in vals.iter() {
+        if v < 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("negative label {} not supported in metrics (filter noise labels first)", v)
+            ));
+        }
+    }
+    Ok(vals.iter().map(|&v| v as usize).collect())
 }
 
 /// Extract a Mat<f64> from either a 2D list or numpy array.
