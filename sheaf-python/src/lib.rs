@@ -420,120 +420,120 @@ fn label_propagation(
 /// Normalized Mutual Information between two clusterings.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: NMI in [0, 1]. 1.0 means identical clusterings.
 #[pyfunction]
-fn nmi(labels_a: &Bound<'_, pyo3::PyAny>, labels_b: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+fn nmi(labels_true: &Bound<'_, pyo3::PyAny>, labels_pred: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::nmi(&a, &b))
 }
 
 /// Adjusted Rand Index between two clusterings.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: ARI in [-1, 1]. 1.0 means identical, 0.0 means random.
 #[pyfunction]
-fn ari(labels_a: &Bound<'_, pyo3::PyAny>, labels_b: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+fn ari(labels_true: &Bound<'_, pyo3::PyAny>, labels_pred: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::ari(&a, &b))
 }
 
 /// V-Measure: harmonic mean of homogeneity and completeness.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: V-measure in [0, 1].
 #[pyfunction]
 fn v_measure(
-    labels_a: &Bound<'_, pyo3::PyAny>,
-    labels_b: &Bound<'_, pyo3::PyAny>,
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::v_measure(&a, &b))
 }
 
 /// Purity of clustering with respect to ground truth.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: Purity in [0, 1]. 1.0 means each cluster is pure.
 #[pyfunction]
 fn purity(
-    labels_a: &Bound<'_, pyo3::PyAny>,
-    labels_b: &Bound<'_, pyo3::PyAny>,
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::purity(&a, &b))
 }
 
 /// Homogeneity: each cluster contains only members of a single class.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: Homogeneity in [0, 1].
 #[pyfunction]
 fn homogeneity(
-    labels_a: &Bound<'_, pyo3::PyAny>,
-    labels_b: &Bound<'_, pyo3::PyAny>,
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::homogeneity(&a, &b))
 }
 
 /// Completeness: all members of a class are assigned to the same cluster.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: Completeness in [0, 1].
 #[pyfunction]
 fn completeness(
-    labels_a: &Bound<'_, pyo3::PyAny>,
-    labels_b: &Bound<'_, pyo3::PyAny>,
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::completeness(&a, &b))
 }
 
 /// Fowlkes-Mallows Index: geometric mean of pairwise precision and recall.
 ///
 /// Args:
-///     labels_a: Cluster assignments. Accepts numpy int array or list[int].
-///     labels_b: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_true: Cluster assignments. Accepts numpy int array or list[int].
+///     labels_pred: Cluster assignments. Accepts numpy int array or list[int].
 ///
 /// Returns:
 ///     float: FMI in [0, 1]. 1.0 means identical clusterings.
 #[pyfunction]
 fn fowlkes_mallows(
-    labels_a: &Bound<'_, pyo3::PyAny>,
-    labels_b: &Bound<'_, pyo3::PyAny>,
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_a)?;
-    let b = extract_labels(labels_b)?;
+    let a = extract_labels(labels_true)?;
+    let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::fowlkes_mallows(&a, &b))
 }
 
@@ -543,6 +543,8 @@ fn fowlkes_mallows(
 
 #[pymodule]
 fn cohera(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add("__version__", "0.1.0")?;
+
     // Reconciliation
     m.add_function(wrap_pyfunction!(reconcile, m)?)?;
     m.add_function(wrap_pyfunction!(simple_star_matrix, m)?)?;
