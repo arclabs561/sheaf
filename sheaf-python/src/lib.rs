@@ -85,7 +85,14 @@ fn col_to_vec(mat: &Mat<f64>) -> Vec<f64> {
 }
 
 /// Build a petgraph UnGraph from an edge list.
-fn edges_to_ungraph(edges: Vec<(usize, usize, f64)>, n_nodes: usize) -> UnGraph<(), f32> {
+fn edges_to_ungraph(edges: Vec<(usize, usize, f64)>, n_nodes: usize) -> PyResult<UnGraph<(), f32>> {
+    for &(i, j, _) in edges.iter() {
+        if i >= n_nodes || j >= n_nodes {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("edge ({}, {}) exceeds n_nodes={}", i, j, n_nodes)
+            ));
+        }
+    }
     let mut graph = UnGraph::<(), f32>::new_undirected();
     for _ in 0..n_nodes {
         graph.add_node(());
@@ -95,7 +102,7 @@ fn edges_to_ungraph(edges: Vec<(usize, usize, f64)>, n_nodes: usize) -> UnGraph<
         let nj = petgraph::graph::NodeIndex::new(j);
         graph.add_edge(ni, nj, w as f32);
     }
-    graph
+    Ok(graph)
 }
 
 fn parse_method(
@@ -149,10 +156,26 @@ fn sheaf_err(e: sheaf::Error) -> PyErr {
 fn extract_labels(obj: &Bound<'_, pyo3::PyAny>) -> PyResult<Vec<usize>> {
     // Try numpy first
     if let Ok(arr) = obj.extract::<PyReadonlyArray1<'_, i64>>() {
-        return Ok(arr.as_array().iter().map(|&v| v as usize).collect());
+        let vals = arr.as_array().to_vec();
+        for &v in vals.iter() {
+            if v < 0 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    format!("negative label {} not supported in metrics (filter noise labels first)", v)
+                ));
+            }
+        }
+        return Ok(vals.iter().map(|&v| v as usize).collect());
     }
     if let Ok(arr) = obj.extract::<PyReadonlyArray1<'_, i32>>() {
-        return Ok(arr.as_array().iter().map(|&v| v as usize).collect());
+        let vals = arr.as_array().to_vec();
+        for &v in vals.iter() {
+            if v < 0 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    format!("negative label {} not supported in metrics (filter noise labels first)", v)
+                ));
+            }
+        }
+        return Ok(vals.iter().map(|&v| v as usize).collect());
     }
     if let Ok(arr) = obj.extract::<PyReadonlyArray1<'_, u64>>() {
         return Ok(arr.as_array().iter().map(|&v| v as usize).collect());
@@ -320,6 +343,11 @@ impl HierarchicalConformal {
         py: Python<'py>,
         y_hat: &Bound<'py, pyo3::PyAny>,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+        if !self.calibrated {
+            return Err(pyo3::exceptions::PyRuntimeError::new_err(
+                "must call calibrate() before predict()"
+            ));
+        }
         let yh = extract_vec1d(y_hat)?;
         let (lower, upper) = self.inner.predict_intervals(&yh).map_err(sheaf_err)?;
         Ok((
@@ -360,7 +388,7 @@ fn leiden(
     resolution: f64,
     seed: Option<u64>,
 ) -> PyResult<Bound<'_, PyArray1<i64>>> {
-    let graph = edges_to_ungraph(edges, n_nodes);
+    let graph = edges_to_ungraph(edges, n_nodes)?;
     let mut det = Leiden::new().with_resolution(resolution);
     if let Some(s) = seed {
         det = det.with_seed(s);
@@ -388,7 +416,7 @@ fn louvain(
     n_nodes: usize,
     resolution: f64,
 ) -> PyResult<Bound<'_, PyArray1<i64>>> {
-    let graph = edges_to_ungraph(edges, n_nodes);
+    let graph = edges_to_ungraph(edges, n_nodes)?;
     let det = Louvain::new().with_resolution(resolution);
     let result = det.detect(&graph).map_err(sheaf_err)?;
     let i64_result: Vec<i64> = result.into_iter().map(|v| v as i64).collect();
@@ -410,7 +438,7 @@ fn label_propagation(
     edges: Vec<(usize, usize, f64)>,
     n_nodes: usize,
 ) -> PyResult<Bound<'_, PyArray1<i64>>> {
-    let graph = edges_to_ungraph(edges, n_nodes);
+    let graph = edges_to_ungraph(edges, n_nodes)?;
     let det = LabelPropagation::new();
     let result = det.detect(&graph).map_err(sheaf_err)?;
     let i64_result: Vec<i64> = result.into_iter().map(|v| v as i64).collect();
