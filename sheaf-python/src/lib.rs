@@ -6,7 +6,11 @@ use pyo3::prelude::*;
 
 use faer::Mat;
 use petgraph::graph::UnGraph;
-use sheaf::community::{CommunityDetection, LabelPropagation, Leiden, Louvain};
+use petgraph::visit::EdgeRef;
+use sheaf::community::{
+    knn_graph_from_embeddings, CommunityDetection, LabelPropagation, Leiden, Louvain,
+};
+use sheaf::hierarchy::{Dendrogram as RustDendrogram, HierarchyTree};
 use sheaf::reconciliation::{ReconciliationMethod, SummingMatrix};
 
 // ---------------------------------------------------------------------------
@@ -538,6 +542,208 @@ fn fowlkes_mallows(
 }
 
 // ---------------------------------------------------------------------------
+// Dendrogram
+// ---------------------------------------------------------------------------
+
+/// Dendrogram from hierarchical clustering merge history.
+///
+/// Represents nested cluster structure from agglomerative clustering.
+/// Supports cutting at a distance threshold or to a target number of clusters.
+///
+/// Args:
+///     merges: List of (cluster_a, cluster_b, distance, size) merge operations.
+///         Merges should be in ascending distance order.
+///     n_items: Number of original (leaf) items.
+#[pyclass]
+struct Dendrogram {
+    inner: RustDendrogram,
+}
+
+#[pymethods]
+impl Dendrogram {
+    #[new]
+    fn new(merges: Vec<(usize, usize, f64, usize)>, n_items: usize) -> Self {
+        let mut dendro = RustDendrogram::new(n_items);
+        for (a, b, dist, size) in merges {
+            dendro.add_merge(a, b, dist, size);
+        }
+        Self { inner: dendro }
+    }
+
+    /// Cut the dendrogram at a distance threshold.
+    ///
+    /// All merges with distance > threshold are severed, producing
+    /// separate clusters.
+    ///
+    /// Args:
+    ///     threshold: Distance threshold for cutting.
+    ///
+    /// Returns:
+    ///     numpy.ndarray: Cluster label for each item, dtype int64.
+    fn cut_at_distance<'py>(
+        &self,
+        py: Python<'py>,
+        threshold: f64,
+    ) -> Bound<'py, PyArray1<i64>> {
+        let labels = self.inner.cut_at_distance(threshold);
+        let i64_labels: Vec<i64> = labels.into_iter().map(|v| v as i64).collect();
+        i64_labels.into_pyarray(py)
+    }
+
+    /// Cut the dendrogram to produce exactly k clusters.
+    ///
+    /// Args:
+    ///     k: Desired number of clusters.
+    ///
+    /// Returns:
+    ///     numpy.ndarray: Cluster label for each item, dtype int64.
+    fn cut_to_k<'py>(
+        &self,
+        py: Python<'py>,
+        k: usize,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let labels = self.inner.cut_to_k(k).map_err(sheaf_err)?;
+        let i64_labels: Vec<i64> = labels.into_iter().map(|v| v as i64).collect();
+        Ok(i64_labels.into_pyarray(py))
+    }
+
+    /// Number of original (leaf) items.
+    #[getter]
+    fn n_items(&self) -> usize {
+        self.inner.n_items()
+    }
+
+    /// Number of merge operations recorded.
+    #[getter]
+    fn n_merges(&self) -> usize {
+        self.inner.n_merges()
+    }
+
+    /// Merge distances in order.
+    ///
+    /// Returns:
+    ///     numpy.ndarray: Distance at each merge step, dtype float64.
+    fn distances<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
+        self.inner.distances().into_pyarray(py)
+    }
+
+    fn __len__(&self) -> usize {
+        self.inner.n_merges()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "Dendrogram(n_items={}, n_merges={})",
+            self.inner.n_items(),
+            self.inner.n_merges()
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// kNN graph
+// ---------------------------------------------------------------------------
+
+/// Build a k-nearest-neighbor graph from embeddings.
+///
+/// Uses HNSW for approximate nearest neighbor search. The resulting edge
+/// list can be passed directly to leiden/louvain/label_propagation.
+///
+/// Args:
+///     embeddings: 2D array of shape (n, dim), dtype float32. Each row is
+///         an embedding vector. Accepts numpy ndarray or list[list[float]].
+///     k: Number of neighbors per node (default 10).
+///
+/// Returns:
+///     list[tuple[int, int, float]]: Edge list as (source, target, weight).
+///         Weights are similarity scores (higher = more similar).
+#[pyfunction]
+#[pyo3(signature = (embeddings, k = 10))]
+fn knn_graph(
+    embeddings: &Bound<'_, pyo3::PyAny>,
+    k: usize,
+) -> PyResult<Vec<(usize, usize, f64)>> {
+    // Accept numpy f32 2D array or list[list[float]]
+    let vecs: Vec<Vec<f32>> = if let Ok(arr) = embeddings.extract::<PyReadonlyArray2<'_, f32>>() {
+        let shape = arr.shape();
+        let nrows = shape[0];
+        let ncols = shape[1];
+        let arr_ref = arr.as_array();
+        (0..nrows)
+            .map(|i| (0..ncols).map(|j| arr_ref[[i, j]]).collect())
+            .collect()
+    } else if let Ok(arr) = embeddings.extract::<PyReadonlyArray2<'_, f64>>() {
+        // Accept f64 and downcast
+        let shape = arr.shape();
+        let nrows = shape[0];
+        let ncols = shape[1];
+        let arr_ref = arr.as_array();
+        (0..nrows)
+            .map(|i| (0..ncols).map(|j| arr_ref[[i, j]] as f32).collect())
+            .collect()
+    } else {
+        // list[list[float]]
+        let rows: Vec<Vec<f64>> = embeddings.extract()?;
+        rows.into_iter()
+            .map(|row| row.into_iter().map(|v| v as f32).collect())
+            .collect()
+    };
+
+    let graph = knn_graph_from_embeddings(&vecs, k).map_err(sheaf_err)?;
+
+    // Convert petgraph edges to tuples
+    let edges: Vec<(usize, usize, f64)> = graph
+        .edge_references()
+        .map(|e| {
+            (
+                e.source().index(),
+                e.target().index(),
+                *e.weight() as f64,
+            )
+        })
+        .collect();
+
+    Ok(edges)
+}
+
+// ---------------------------------------------------------------------------
+// SummingMatrix from tree
+// ---------------------------------------------------------------------------
+
+/// Build a summing matrix from a tree defined by parent-child merge history.
+///
+/// Constructs a HierarchyTree from dendrogram-style merges, then extracts
+/// the structural summing matrix S. Each merge (a, b, height, size) creates
+/// an internal node whose children are clusters a and b.
+///
+/// Args:
+///     merges: List of (cluster_a, cluster_b, height, size) merge operations.
+///     n_leaves: Number of leaf (bottom-level) nodes.
+///
+/// Returns:
+///     numpy.ndarray: Summing matrix with shape (n_total, n_leaves), where
+///         n_total = n_leaves + len(merges).
+#[pyfunction]
+fn summing_matrix_from_tree(
+    py: Python<'_>,
+    merges: Vec<(usize, usize, f64, usize)>,
+    n_leaves: usize,
+) -> Bound<'_, PyArray2<f64>> {
+    let tree = HierarchyTree::from_merges(&merges, n_leaves);
+    let s = tree.summing_matrix();
+    let mat_ref = s.as_ref();
+    let nrows = mat_ref.nrows();
+    let ncols = mat_ref.ncols();
+    numpy::PyArray2::from_vec2(
+        py,
+        &(0..nrows)
+            .map(|i| (0..ncols).map(|j| mat_ref[(i, j)]).collect::<Vec<_>>())
+            .collect::<Vec<_>>(),
+    )
+    .unwrap()
+}
+
+// ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
 
@@ -548,6 +754,10 @@ fn cohera(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Reconciliation
     m.add_function(wrap_pyfunction!(reconcile, m)?)?;
     m.add_function(wrap_pyfunction!(simple_star_matrix, m)?)?;
+    m.add_function(wrap_pyfunction!(summing_matrix_from_tree, m)?)?;
+
+    // Hierarchy
+    m.add_class::<Dendrogram>()?;
 
     // Conformal
     m.add_class::<HierarchicalConformal>()?;
@@ -556,6 +766,7 @@ fn cohera(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(leiden, m)?)?;
     m.add_function(wrap_pyfunction!(louvain, m)?)?;
     m.add_function(wrap_pyfunction!(label_propagation, m)?)?;
+    m.add_function(wrap_pyfunction!(knn_graph, m)?)?;
 
     // Metrics
     m.add_function(wrap_pyfunction!(nmi, m)?)?;

@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 doc = false
 
 [dependencies]
-sheaf = { path = "..", features = ["cluster", "community", "metrics"] }
+sheaf = { path = "..", features = ["cluster", "community", "metrics", "knn-graph"] }
 pyo3 = "0.28"
 numpy = "0.28"
 faer = "0.19"
