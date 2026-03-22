@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "cohera"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hierarchical coherence: forecast reconciliation (OLS, WLS, MinTrace), conformal prediction, community detection (Leiden, Louvain)."
 readme = "README.md"
 requires-python = ">=3.8"
