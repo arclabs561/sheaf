@@ -15,6 +15,7 @@ pub mod error;
 pub mod hierarchy;
 pub mod metrics;
 pub mod reconciliation;
+pub mod sheaf_laplacian;
 #[cfg(feature = "summarize")]
 pub mod summarize;
 
@@ -28,6 +29,7 @@ mod reconciliation_tests;
 pub use crate::cluster::ItDendrogram;
 pub use crate::hierarchy::{HierarchicalConformal, HierarchyTree, ReconciliationScore};
 pub use crate::reconciliation::{reconcile, ReconciliationMethod, SummingMatrix};
+pub use crate::sheaf_laplacian::CellularSheaf;
 
 // Re-exports from Strata merge
 pub use error::{Error, Result};
