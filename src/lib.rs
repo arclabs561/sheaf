@@ -13,6 +13,7 @@ pub mod community;
 /// Error types used across `sheaf`.
 pub mod error;
 pub mod hierarchy;
+pub mod learnable_sheaf;
 pub mod metrics;
 pub mod reconciliation;
 pub mod sheaf_laplacian;
@@ -28,6 +29,7 @@ mod reconciliation_tests;
 #[cfg(feature = "cluster")]
 pub use crate::cluster::ItDendrogram;
 pub use crate::hierarchy::{HierarchicalConformal, HierarchyTree, ReconciliationScore};
+pub use crate::learnable_sheaf::{LearnableSheaf, RestrictionFamily};
 pub use crate::reconciliation::{reconcile, ReconciliationMethod, SummingMatrix};
 pub use crate::sheaf_laplacian::CellularSheaf;
 
