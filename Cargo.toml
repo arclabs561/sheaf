@@ -95,6 +95,7 @@ criterion = { version = "0.7", features = ["html_reports"] }
 lapl = "0.1.1"
 ndarray = "0.16"
 clump = "0.5"
+rmt = "0.1"
 
 [[example]]
 name = "forecast_reconciliation"
@@ -117,6 +118,10 @@ path = "examples/sheaf_spectral.rs"
 [[example]]
 name = "sheaf_clustering"
 path = "examples/sheaf_clustering.rs"
+
+[[example]]
+name = "sheaf_rmt"
+path = "examples/sheaf_rmt.rs"
 
 [lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
