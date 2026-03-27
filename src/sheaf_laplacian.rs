@@ -232,21 +232,30 @@ impl CellularSheaf {
     /// Construct a trivial sheaf: all stalks `R^1`, all restriction maps the identity.
     ///
     /// The Laplacian of this sheaf equals the standard graph Laplacian.
+    ///
+    /// # Panics
+    ///
+    /// Panics if any edge references a node index >= `num_nodes`.
     pub fn trivial(num_nodes: usize, edges: &[(usize, usize)]) -> Self {
         let stalk_dims = vec![1; num_nodes];
         let edge_dims = vec![1; edges.len()];
         let restriction_maps = vec![(vec![1.0], vec![1.0]); edges.len()];
-        Self {
+        Self::new(
             num_nodes,
             stalk_dims,
-            edges: edges.to_vec(),
-            restriction_maps,
+            edges.to_vec(),
             edge_dims,
-        }
+            restriction_maps,
+        )
+        .expect("trivial sheaf edges must reference valid nodes")
     }
 
     /// Construct a constant sheaf: all stalks `R^d`, all restriction maps the
     /// `d x d` identity matrix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if any edge references a node index >= `num_nodes`.
     pub fn constant(num_nodes: usize, edges: &[(usize, usize)], d: usize) -> Self {
         let stalk_dims = vec![d; num_nodes];
         let edge_dims = vec![d; edges.len()];
@@ -259,13 +268,14 @@ impl CellularSheaf {
             m
         };
         let restriction_maps = vec![(eye.clone(), eye); edges.len()];
-        Self {
+        Self::new(
             num_nodes,
             stalk_dims,
-            edges: edges.to_vec(),
-            restriction_maps,
+            edges.to_vec(),
             edge_dims,
-        }
+            restriction_maps,
+        )
+        .expect("constant sheaf edges must reference valid nodes")
     }
 }
 
