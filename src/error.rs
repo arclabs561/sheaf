@@ -5,6 +5,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors returned by clustering and hierarchy primitives.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum Error {
     /// Input was empty.
     EmptyInput,

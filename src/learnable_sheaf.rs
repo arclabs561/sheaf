@@ -10,6 +10,7 @@
 
 use faer::Mat;
 
+use crate::error::{Error, Result};
 use crate::sheaf_laplacian::CellularSheaf;
 
 /// Restriction map parameterization family.
@@ -40,21 +41,33 @@ pub struct LearnableSheaf {
 
 impl LearnableSheaf {
     /// Create a new learnable sheaf with zero-initialized parameters.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any edge references a node index >= `num_nodes`.
     pub fn new(
         num_nodes: usize,
         stalk_dim: usize,
         edges: Vec<(usize, usize)>,
         family: RestrictionFamily,
-    ) -> Self {
+    ) -> Result<Self> {
+        for (i, &(u, v)) in edges.iter().enumerate() {
+            if u >= num_nodes || v >= num_nodes {
+                return Err(Error::Other(format!(
+                    "edge {i} references node {} but only {num_nodes} nodes exist",
+                    u.max(v)
+                )));
+            }
+        }
         let n = params_per_endpoint(stalk_dim, family);
         let total = 2 * edges.len() * n;
-        Self {
+        Ok(Self {
             num_nodes,
             stalk_dim,
             edges,
             family,
             params: vec![0.0; total],
-        }
+        })
     }
 
     /// Number of learnable parameters.
@@ -486,12 +499,15 @@ pub fn needs_learnable_maps(
     let trivial_lap = trivial.laplacian();
 
     // Diagonal sheaf: scale each dimension by feature difference magnitude.
-    let mut learnable = LearnableSheaf::new(
+    let mut learnable = match LearnableSheaf::new(
         num_nodes,
         stalk_dim,
         adj.to_vec(),
         RestrictionFamily::Diagonal,
-    );
+    ) {
+        Ok(ls) => ls,
+        Err(_) => return false,
+    };
     learnable.init_identity();
 
     let n_per = params_per_endpoint(stalk_dim, RestrictionFamily::Diagonal);
@@ -570,7 +586,7 @@ mod tests {
     fn param_count_diagonal() {
         let d = 3;
         let edges = triangle_edges();
-        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::Diagonal);
+        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::Diagonal).unwrap();
         // 2 endpoints per edge * |E| edges * d params per endpoint
         assert_eq!(ls.num_params(), 2 * edges.len() * d);
     }
@@ -579,7 +595,7 @@ mod tests {
     fn param_count_orthogonal() {
         let d = 4;
         let edges = path_edges();
-        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::Orthogonal);
+        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::Orthogonal).unwrap();
         // 2 * |E| * d*(d-1)/2
         assert_eq!(ls.num_params(), 2 * edges.len() * d * (d - 1) / 2);
     }
@@ -588,7 +604,7 @@ mod tests {
     fn param_count_general() {
         let d = 3;
         let edges = triangle_edges();
-        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::General);
+        let ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::General).unwrap();
         // 2 * |E| * d^2
         assert_eq!(ls.num_params(), 2 * edges.len() * d * d);
     }
@@ -596,7 +612,8 @@ mod tests {
     #[test]
     fn diagonal_identity_produces_identity_maps() {
         let d = 3;
-        let mut ls = LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Diagonal);
+        let mut ls =
+            LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Diagonal).unwrap();
         ls.init_identity();
         let maps = ls.build_maps();
         for (src, tgt) in &maps {
@@ -623,7 +640,8 @@ mod tests {
     #[test]
     fn orthogonal_maps_are_orthogonal() {
         let d = 4;
-        let mut ls = LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Orthogonal);
+        let mut ls =
+            LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Orthogonal).unwrap();
         ls.init_random(42);
         let maps = ls.build_maps();
         for (src, tgt) in &maps {
@@ -647,7 +665,8 @@ mod tests {
     #[test]
     fn orthogonal_d2_is_rotation() {
         let d = 2;
-        let mut ls = LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal);
+        let mut ls =
+            LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal).unwrap();
         // Set angle to pi/4
         let angle = std::f64::consts::FRAC_PI_4;
         ls.params_mut()[0] = angle;
@@ -666,7 +685,8 @@ mod tests {
     #[test]
     fn orthogonal_d3_rodrigues() {
         let d = 3;
-        let mut ls = LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal);
+        let mut ls =
+            LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal).unwrap();
         ls.init_random(123);
         let maps = ls.build_maps();
         let src = &maps[0].0;
@@ -691,7 +711,7 @@ mod tests {
     fn general_identity_produces_graph_laplacian() {
         let d = 2;
         let edges = triangle_edges();
-        let mut ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::General);
+        let mut ls = LearnableSheaf::new(3, d, edges.clone(), RestrictionFamily::General).unwrap();
         ls.init_identity();
 
         // Compare against constant sheaf
@@ -716,7 +736,8 @@ mod tests {
     #[test]
     fn to_cellular_sheaf_laplacian_matches() {
         let d = 3;
-        let mut ls = LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::General);
+        let mut ls =
+            LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::General).unwrap();
         ls.init_random(99);
 
         let lap_direct = ls.laplacian();
@@ -750,7 +771,8 @@ mod tests {
     #[test]
     fn orthogonal_identity_init() {
         let d = 3;
-        let mut ls = LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Orthogonal);
+        let mut ls =
+            LearnableSheaf::new(3, d, triangle_edges(), RestrictionFamily::Orthogonal).unwrap();
         ls.init_identity();
         // All params should be zero => exp(0) = I
         for &p in ls.params() {
@@ -780,7 +802,8 @@ mod tests {
     fn orthogonal_d5_pade_is_orthogonal() {
         // d=5 exercises the general Pade code path (d >= 4)
         let d = 5;
-        let mut ls = LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal);
+        let mut ls =
+            LearnableSheaf::new(2, d, vec![(0, 1)], RestrictionFamily::Orthogonal).unwrap();
         ls.init_random(77);
         let maps = ls.build_maps();
         for (src, tgt) in &maps {
