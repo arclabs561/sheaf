@@ -94,6 +94,7 @@ proptest = "1.9"
 criterion = { version = "0.7", features = ["html_reports"] }
 lapl = "0.1.1"
 ndarray = "0.16"
+clump = "0.5"
 
 [[example]]
 name = "forecast_reconciliation"
@@ -112,6 +113,10 @@ required-features = ["knn-graph"]
 [[example]]
 name = "sheaf_spectral"
 path = "examples/sheaf_spectral.rs"
+
+[[example]]
+name = "sheaf_clustering"
+path = "examples/sheaf_clustering.rs"
 
 [lints.rust]
 rust_2018_idioms = { level = "warn", priority = -1 }
