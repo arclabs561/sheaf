@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 //! Spectral clustering via sheaf Laplacian eigenvectors + k-means.
 //!
 //! Demonstrates that sheaf-based spectral clustering captures community

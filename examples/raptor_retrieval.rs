@@ -230,7 +230,7 @@ fn greedy_cluster(ids: &[usize], fanout: usize, vecs: &[Vec<f32>]) -> Vec<Vec<us
         return vec![];
     }
     let _dim = vecs.first().map_or(0, Vec::len);
-    let cap = ((ids.len() + fanout - 1) / fanout).max(1) * 2;
+    let cap = ids.len().div_ceil(fanout).max(1) * 2;
     let mut cls: Vec<(Vec<f32>, usize, Vec<usize>)> = Vec::new(); // (sum, count, members)
 
     for &nid in ids {
@@ -249,7 +249,7 @@ fn greedy_cluster(ids: &[usize], fanout: usize, vecs: &[Vec<f32>]) -> Vec<Vec<us
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
             .unwrap_or((0, -1.0));
 
-        let join = best_s > 0.15 && cls.get(best_i).map_or(false, |c| c.2.len() < fanout * 2);
+        let join = best_s > 0.15 && cls.get(best_i).is_some_and(|c| c.2.len() < fanout * 2);
         if join {
             for (i, &x) in v.iter().enumerate() {
                 cls[best_i].0[i] += x;
