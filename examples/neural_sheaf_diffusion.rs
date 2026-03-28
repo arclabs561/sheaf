@@ -58,16 +58,16 @@ fn main() {
         let n_params = sheaf.num_params();
         let mut grad = vec![0.0; n_params];
 
-        for i in 0..n_params {
+        for (i, g) in grad.iter_mut().enumerate().take(n_params) {
             sheaf.params_mut()[i] += eps;
             let e_plus = sheaf_energy(&sheaf, &signal);
             sheaf.params_mut()[i] -= eps;
-            grad[i] = (e_plus - base_energy) / eps;
+            *g = (e_plus - base_energy) / eps;
         }
 
         // SGD update (minimize energy = maximize smoothness).
-        for i in 0..n_params {
-            sheaf.params_mut()[i] -= lr * grad[i];
+        for (i, g) in grad.iter().enumerate().take(n_params) {
+            sheaf.params_mut()[i] -= lr * g;
         }
 
         if step % 50 == 0 || step == 1 {

@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 //! Sheaf Laplacian spectrum vs random matrix predictions.
 //!
 //! Builds random sheaves (random restriction maps on a fixed graph) and
