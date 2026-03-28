@@ -32,13 +32,8 @@ fn main() {
     // Flatten features into a signal vector (node 0 dim 0, node 0 dim 1, node 1 dim 0, ...).
     let signal: Vec<f64> = features.iter().flat_map(|f| f.iter().copied()).collect();
 
-    let mut sheaf = LearnableSheaf::new(
-        num_nodes,
-        stalk_dim,
-        edges,
-        RestrictionFamily::Diagonal,
-    )
-    .expect("valid sheaf");
+    let mut sheaf = LearnableSheaf::new(num_nodes, stalk_dim, edges, RestrictionFamily::Diagonal)
+        .expect("valid sheaf");
     sheaf.init_random(42);
 
     let lr = 0.01;
@@ -46,7 +41,10 @@ fn main() {
     let steps = 200;
 
     println!("Training neural sheaf diffusion");
-    println!("  nodes: {num_nodes}, stalk_dim: {stalk_dim}, params: {}", sheaf.num_params());
+    println!(
+        "  nodes: {num_nodes}, stalk_dim: {stalk_dim}, params: {}",
+        sheaf.num_params()
+    );
     println!("  family: Diagonal, lr: {lr}, steps: {steps}");
     println!();
 
@@ -81,7 +79,10 @@ fn main() {
     println!();
     println!("Initial energy: {initial_energy:.6}");
     println!("Final energy:   {final_energy:.6}");
-    println!("Reduction:      {:.1}%", (1.0 - final_energy / initial_energy) * 100.0);
+    println!(
+        "Reduction:      {:.1}%",
+        (1.0 - final_energy / initial_energy) * 100.0
+    );
 
     // Show H0 dimension (global sections / kernel dimension).
     let h0 = sheaf.h0_dimension(1e-6);
@@ -102,7 +103,11 @@ fn main() {
 fn sheaf_energy(sheaf: &LearnableSheaf, signal: &[f64]) -> f64 {
     let lap = sheaf.laplacian();
     let n = lap.nrows();
-    assert_eq!(signal.len(), n, "signal length must match Laplacian dimension");
+    assert_eq!(
+        signal.len(),
+        n,
+        "signal length must match Laplacian dimension"
+    );
 
     let mut energy = 0.0;
     for i in 0..n {

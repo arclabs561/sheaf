@@ -9,17 +9,6 @@ use crate::error::{Error, Result};
 use crate::reconciliation::{reconcile, ReconciliationMethod, SummingMatrix};
 use faer::Mat;
 
-/// Scores used for conformal prediction.
-pub enum ReconciliationScore {
-    /// Absolute residual: $|y - \tilde{y}|$
-    AbsoluteResidual,
-    /// Mahalanobis distance: $(y - \tilde{y})^T \Sigma^{-1} (y - \tilde{y})$
-    Mahalanobis {
-        /// Covariance matrix \(\Sigma\).
-        covariance: Mat<f64>,
-    },
-}
-
 /// Hierarchical Conformal Prediction.
 pub struct HierarchicalConformal {
     s: SummingMatrix,

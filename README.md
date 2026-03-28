@@ -20,10 +20,10 @@ This library provides the algorithms. It is domain-agnostic; the stable contract
 cargo run --example embedding_clustering --features knn-graph
 ```
 
-**Hierarchical conformal prediction**. Given a tree of predictions, reconcile them so they are structurally coherent, then produce calibrated prediction intervals:
+**Forecast reconciliation**. Given a tree of predictions, reconcile them so they are structurally coherent, then produce calibrated prediction intervals:
 
 ```bash
-cargo run --example hierarchical_conformal
+cargo run --example forecast_reconciliation
 ```
 
 Used by [`flowmatch`](https://github.com/arclabs561/flowmatch) (behind `--features sheaf-evals`) to evaluate whether generated samples preserve the cluster structure of real data -- for example, whether generated earthquake locations form the same geographic clusters as the USGS catalog.
@@ -62,7 +62,7 @@ let labels = db.fit(&data);
 
 ```toml
 [dependencies]
-sheaf = "0.1.3"
+sheaf = "0.1.4"
 ```
 
 ```rust

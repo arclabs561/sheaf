@@ -139,7 +139,13 @@ fn sliced_wasserstein(
     // If/when `wass` exposes a `*_view` API publicly, we can remove this allocation.
     let x_owned: Array2<f32> = x.to_owned();
     let y_owned: Array2<f32> = y.to_owned();
-    Ok(wass::sliced_wasserstein(&x_owned, &y_owned, n_projections))
+    Ok(wass::sliced_wasserstein(
+        &x_owned,
+        &y_owned,
+        n_projections,
+        42,
+        2.0,
+    ))
 }
 
 #[cfg(test)]

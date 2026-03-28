@@ -109,6 +109,12 @@ pub fn reconcile(
                     actual: format!("{} weights", weights.len()),
                 });
             }
+            if weights.iter().any(|&w| w <= 0.0) {
+                return Err(Error::InvalidParameter {
+                    name: "weights",
+                    message: "all weights must be positive",
+                });
+            }
 
             // W^-1 S and W^-1 y_hat
             let mut winv_s = Mat::<f64>::zeros(m, n);
