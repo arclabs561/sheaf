@@ -28,6 +28,7 @@ const K: usize = 3;
 const NODES_PER_COMMUNITY: usize = 4;
 const N: usize = K * NODES_PER_COMMUNITY;
 
+#[allow(clippy::expect_used)]
 fn main() {
     println!("=== Sheaf Spectral Clustering ===\n");
 

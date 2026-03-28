@@ -9,6 +9,7 @@
 
 use sheaf::CellularSheaf;
 
+#[allow(clippy::expect_used)]
 fn main() {
     println!("=== Sheaf Laplacian Spectrum and RMT ===\n");
 
