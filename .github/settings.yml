@@ -2,7 +2,7 @@
 # https://github.com/repository-settings/app
 
 repository:
-  description: "Hierarchical structure, community detection, reconciliation, and conformal prediction"
+  description: "Sheaf theory and community detection"
   homepage: "https://docs.rs/sheaf"
   private: false
   has_issues: true
