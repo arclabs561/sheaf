@@ -87,87 +87,7 @@ pub fn nmi(pred: &[usize], truth: &[usize]) -> f64 {
         return 0.0;
     }
 
-    let (joint, n) = build_contingency_table(pred, truth);
-
-    // Use surp for the actual computation
-    #[cfg(feature = "metrics")]
-    {
-        let n_f = n as f64;
-
-        // Build probability distributions
-        let mut p_pred = HashMap::new();
-        let mut p_truth = HashMap::new();
-
-        for &p in pred {
-            *p_pred.entry(p).or_insert(0) += 1;
-        }
-        for &t in truth {
-            *p_truth.entry(t).or_insert(0) += 1;
-        }
-
-        // Entropy of predictions
-        let h_pred: f64 = p_pred
-            .values()
-            .map(|&c| {
-                let p = c as f64 / n_f;
-                if p > 0.0 {
-                    -p * p.ln()
-                } else {
-                    0.0
-                }
-            })
-            .sum();
-
-        // Entropy of truth
-        let h_truth: f64 = p_truth
-            .values()
-            .map(|&c| {
-                let p = c as f64 / n_f;
-                if p > 0.0 {
-                    -p * p.ln()
-                } else {
-                    0.0
-                }
-            })
-            .sum();
-
-        // Mutual information
-        let mut mi = 0.0;
-        for (&(p, t), &count) in &joint {
-            if count > 0 {
-                let p_joint = count as f64 / n_f;
-                let p_p = *p_pred.get(&p).unwrap_or(&0) as f64 / n_f;
-                let p_t = *p_truth.get(&t).unwrap_or(&0) as f64 / n_f;
-                if p_p > 0.0 && p_t > 0.0 {
-                    mi += p_joint * (p_joint / (p_p * p_t)).ln();
-                }
-            }
-        }
-
-        // Normalize
-        let denom = h_pred + h_truth;
-        if denom > 0.0 {
-            2.0 * mi / denom
-        } else {
-            1.0 // Both are constant
-        }
-    }
-
-    #[cfg(not(feature = "metrics"))]
-    {
-        // Fallback implementation without surp
-        nmi_impl(pred, truth, &joint, n)
-    }
-}
-
-#[cfg(not(feature = "metrics"))]
-fn nmi_impl(
-    pred: &[usize],
-    truth: &[usize],
-    joint: &HashMap<(usize, usize), usize>,
-    n: usize,
-) -> f64 {
-    let _ = n; // suppress warning when unused
+    let (joint, _n) = build_contingency_table(pred, truth);
     let n_f = pred.len() as f64;
 
     let mut p_pred = HashMap::new();
@@ -205,7 +125,7 @@ fn nmi_impl(
         .sum();
 
     let mut mi = 0.0;
-    for (&(p, t), &count) in joint {
+    for (&(p, t), &count) in &joint {
         if count > 0 {
             let p_joint = count as f64 / n_f;
             let p_p = *p_pred.get(&p).unwrap_or(&0) as f64 / n_f;
@@ -220,7 +140,7 @@ fn nmi_impl(
     if denom > 0.0 {
         2.0 * mi / denom
     } else {
-        1.0
+        1.0 // Both are constant
     }
 }
 

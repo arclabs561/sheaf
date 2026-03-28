@@ -35,8 +35,6 @@ vicinity = { version = "0.1.0", optional = true }
 # Parallel processing
 rayon = { version = "1.10", optional = true }
 
-# Clustering evaluation metrics (ecosystem crate)
-logp = { version = "0.2", optional = true }
 
 # Spectral clustering via graph Laplacians (ecosystem crate)
 lapl = { version = "0.1.0", optional = true }
@@ -61,13 +59,13 @@ std = []
 cluster = ["std", "ndarray", "rand", "rand_distr", "clump", "dep:kodama"]
 community = ["std", "petgraph", "rand"]
 summarize = ["std"]
-full = ["cluster", "community", "summarize", "parallel", "serde", "knn-graph", "metrics", "spectral-faer", "spectral-sparse", "rkhs", "wass", "kuji"]
+full = ["cluster", "community", "summarize", "parallel", "serde", "knn-graph", "spectral-faer", "spectral-sparse", "rkhs", "wass", "kuji"]
 
 # Use `kuji` for stochastic sampling.
 kuji = ["dep:kuji"]
 
-# Clustering evaluation metrics (NMI, ARI, etc.)
-metrics = ["logp"]
+# Clustering evaluation metrics (always available, feature kept for backward compat)
+metrics = []
 
 # Spectral clustering methods
 spectral = ["lapl", "ndarray", "rkhs", "kuji"]

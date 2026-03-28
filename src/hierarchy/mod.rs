@@ -107,15 +107,15 @@ mod raptor;
 pub mod tree;
 mod validate;
 
-pub use conformal::{HierarchicalConformal, ReconciliationScore};
+pub use conformal::HierarchicalConformal;
 pub use dendrogram::Dendrogram;
 pub use foundations::{
     embedding_distortion, gromov_hyperbolicity, is_ultrametric, subdominant_ultrametric,
     Ultrametric, UltrametricTree,
 };
 pub use hierarchy::{
-    AggregationMethod, HierarchicalConfig, HierarchyBuilder, HierarchyStats, MultiResolution,
-    Resolution, ResolutionContent, ResolutionItem, TraversalStrategy,
+    HierarchicalConfig, HierarchyStats, MultiResolution, Resolution, ResolutionContent,
+    ResolutionItem, TraversalStrategy,
 };
 pub use node::Node;
 pub use raptor::{RaptorTree, TreeConfig};

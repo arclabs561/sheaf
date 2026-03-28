@@ -28,7 +28,7 @@ mod reconciliation_tests;
 
 #[cfg(feature = "cluster")]
 pub use crate::cluster::ItDendrogram;
-pub use crate::hierarchy::{HierarchicalConformal, HierarchyTree, ReconciliationScore};
+pub use crate::hierarchy::{HierarchicalConformal, HierarchyTree};
 pub use crate::learnable_sheaf::{LearnableSheaf, RestrictionFamily};
 pub use crate::reconciliation::{reconcile, ReconciliationMethod, SummingMatrix};
 pub use crate::sheaf_laplacian::CellularSheaf;
