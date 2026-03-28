@@ -236,6 +236,7 @@ impl CellularSheaf {
     /// # Panics
     ///
     /// Panics if any edge references a node index >= `num_nodes`.
+    #[allow(clippy::expect_used)]
     pub fn trivial(num_nodes: usize, edges: &[(usize, usize)]) -> Self {
         let stalk_dims = vec![1; num_nodes];
         let edge_dims = vec![1; edges.len()];
@@ -256,6 +257,7 @@ impl CellularSheaf {
     /// # Panics
     ///
     /// Panics if any edge references a node index >= `num_nodes`.
+    #[allow(clippy::expect_used)]
     pub fn constant(num_nodes: usize, edges: &[(usize, usize)], d: usize) -> Self {
         let stalk_dims = vec![d; num_nodes];
         let edge_dims = vec![d; edges.len()];
@@ -297,6 +299,7 @@ fn eigenvalues_below_tol(mat: &Mat<f64>, tol: f64) -> usize {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
