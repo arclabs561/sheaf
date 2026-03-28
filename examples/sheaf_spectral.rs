@@ -31,6 +31,7 @@ use lapl::adjacency_to_laplacian;
 use ndarray::Array2;
 use sheaf::CellularSheaf;
 
+#[allow(clippy::expect_used)]
 fn main() {
     println!("=== Sheaf Laplacian vs Graph Laplacian ===\n");
 

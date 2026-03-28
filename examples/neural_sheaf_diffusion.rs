@@ -15,6 +15,7 @@
 
 use sheaf::learnable_sheaf::{LearnableSheaf, RestrictionFamily};
 
+#[allow(clippy::expect_used)]
 fn main() {
     // Graph: pentagon with cross-links (Petersen-like subgraph).
     let num_nodes = 5;
