@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/sheaf/badge.svg)](https://docs.rs/sheaf)
 [![CI](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml)
 
-Partition, reconcile, predict. Clustering, community detection, and hierarchical conformal prediction in Rust.
+Sheaf theory and community detection.
 
 ## Problem
 
