@@ -12,6 +12,8 @@ documentation = "https://docs.rs/sheaf"
 keywords = ["clustering", "community", "hierarchy", "conformal"]
 categories = ["algorithms", "science", "mathematics"]
 
+[workspace]
+
 [dependencies]
 thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
