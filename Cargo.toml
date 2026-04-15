@@ -32,7 +32,7 @@ petgraph = { version = "0.6", optional = true }
 
 # kNN graph construction from embeddings (ecosystem crate)
 # Version here; dev workspace patches to path so we use one copy when building from dev.
-vicinity = { version = "0.4", optional = true }
+vicinity = { version = "0.5", optional = true }
 
 # Parallel processing
 rayon = { version = "1.10", optional = true }
@@ -42,7 +42,7 @@ rayon = { version = "1.10", optional = true }
 lapl = { version = "0.1.0", optional = true }
 
 # Kernel methods (ecosystem crate)
-rkhs = { version = "0.1.0", optional = true }
+rkhs = { version = "0.2", optional = true }
 
 # Distribution distances (ecosystem crate)
 wass = { version = "0.1", optional = true }
