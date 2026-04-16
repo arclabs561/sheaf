@@ -27,8 +27,8 @@
 //!     C   D                       C   D
 //!                                 (C in separate community)
 //! [A,B,C,D] all in one         [A,B,D] connected, [C] alone
-//! community despite C          
-//! being disconnected!          
+//! community despite C
+//! being disconnected!
 //! ```
 //!
 //! ## Complexity
@@ -43,9 +43,9 @@
 
 use super::traits::CommunityDetection;
 use crate::error::{Error, Result};
+use graphops::{leiden_seeded, leiden_weighted_seeded, Graph, PetgraphRef, WeightedGraph};
 use petgraph::graph::UnGraph;
 use petgraph::visit::EdgeRef;
-use std::collections::{HashMap, HashSet, VecDeque};
 
 /// Leiden community detection algorithm.
 ///
@@ -55,9 +55,11 @@ use std::collections::{HashMap, HashSet, VecDeque};
 pub struct Leiden {
     /// Resolution parameter (gamma). Higher = smaller communities.
     resolution: f64,
-    /// Maximum iterations per phase.
+    /// Maximum iterations per phase (stored but not forwarded; graphops runs to convergence).
+    #[allow(dead_code)]
     max_iter: usize,
-    /// Minimum modularity gain to continue.
+    /// Minimum modularity gain to continue (stored but not forwarded; graphops runs to convergence).
+    #[allow(dead_code)]
     min_gain: f64,
     /// Random seed for tie-breaking.
     seed: u64,
@@ -83,12 +85,18 @@ impl Leiden {
     }
 
     /// Set maximum iterations.
+    ///
+    /// Note: the graphops backend runs until convergence; this value is retained
+    /// for API compatibility but is not forwarded to the solver.
     pub fn with_max_iter(mut self, max_iter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
 
     /// Set minimum modularity gain threshold.
+    ///
+    /// Note: the graphops backend runs until convergence; this value is retained
+    /// for API compatibility but is not forwarded to the solver.
     pub fn with_min_gain(mut self, min_gain: f64) -> Self {
         self.min_gain = min_gain;
         self
@@ -105,105 +113,7 @@ impl Leiden {
     pub fn with_refinement(self, n: usize) -> Self {
         self.with_max_iter(n)
     }
-}
 
-impl Default for Leiden {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Internal graph representation for weighted operations.
-struct WeightedGraph {
-    n: usize,
-    /// Adjacency: node -> [(neighbor, weight)]
-    adj: Vec<Vec<(usize, f64)>>,
-    /// Weighted degree of each node
-    degrees: Vec<f64>,
-    /// Total edge weight (2m in modularity formula)
-    total_weight: f64,
-}
-
-impl WeightedGraph {
-    fn from_edges(n: usize, edges: &[(usize, usize, f64)]) -> Self {
-        let mut adj = vec![Vec::new(); n];
-        let mut degrees = vec![0.0; n];
-        let mut total_weight = 0.0;
-
-        for &(i, j, w) in edges {
-            adj[i].push((j, w));
-            adj[j].push((i, w));
-            degrees[i] += w;
-            degrees[j] += w;
-            total_weight += 2.0 * w; // Each edge counted twice
-        }
-
-        Self {
-            n,
-            adj,
-            degrees,
-            total_weight,
-        }
-    }
-
-    /// Compute modularity gain from moving node to target community.
-    ///
-    /// delta_Q = k_i,in / m - gamma * sigma_tot * k_i / (2m^2)
-    fn modularity_gain(
-        &self,
-        node: usize,
-        target_comm: usize,
-        communities: &[usize],
-        comm_total_weight: &[f64],
-        resolution: f64,
-    ) -> f64 {
-        if self.total_weight == 0.0 {
-            return 0.0;
-        }
-
-        let m = self.total_weight / 2.0;
-        let ki = self.degrees[node];
-
-        // Sum of edge weights from node to target community
-        let ki_in: f64 = self.adj[node]
-            .iter()
-            .filter(|(neighbor, _)| communities[*neighbor] == target_comm)
-            .map(|(_, w)| w)
-            .sum();
-
-        let sigma_tot = comm_total_weight[target_comm];
-
-        ki_in / m - resolution * sigma_tot * ki / (2.0 * m * m)
-    }
-}
-
-/// Community assignment with cached statistics.
-struct CommunityState {
-    /// Community assignment for each node.
-    assignment: Vec<usize>,
-    /// Total weighted degree in each community.
-    comm_total_weight: Vec<f64>,
-    /// Number of communities (some may be empty).
-    n_communities: usize,
-}
-
-impl CommunityState {
-    fn new_singletons(n: usize, degrees: &[f64]) -> Self {
-        Self {
-            assignment: (0..n).collect(),
-            comm_total_weight: degrees.to_vec(),
-            n_communities: n,
-        }
-    }
-
-    fn move_node(&mut self, node: usize, from: usize, to: usize, degree: f64) {
-        self.assignment[node] = to;
-        self.comm_total_weight[from] -= degree;
-        self.comm_total_weight[to] += degree;
-    }
-}
-
-impl Leiden {
     /// Detect communities in a weighted graph with `f32` edge weights.
     ///
     /// Edge weights are used directly in the modularity computation. Higher
@@ -218,36 +128,14 @@ impl Leiden {
             return Ok((0..n).collect());
         }
 
-        let edges: Vec<(usize, usize, f64)> = graph
-            .edge_references()
-            .filter_map(|e| {
-                let i = e.source().index();
-                let j = e.target().index();
-                if i < j {
-                    Some((i, j, *e.weight() as f64))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        self.detect_from_edges(n, &edges)
+        let adapter = F32WeightedAdapter::from_graph(graph);
+        Ok(leiden_weighted_seeded(&adapter, self.resolution, self.seed))
     }
+}
 
-    /// Internal: run Leiden on a weighted edge list.
-    fn detect_from_edges(&self, n: usize, edges: &[(usize, usize, f64)]) -> Result<Vec<usize>> {
-        let wg = WeightedGraph::from_edges(n, edges);
-        let mut state = CommunityState::new_singletons(n, &wg.degrees);
-
-        for _level in 0..self.max_iter {
-            let improved = self.local_moving_phase(&wg, &mut state);
-            if !improved {
-                break;
-            }
-            self.refinement_phase(&wg, &mut state);
-        }
-
-        Ok(renumber_communities(&state.assignment))
+impl Default for Leiden {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -262,20 +150,8 @@ impl CommunityDetection for Leiden {
             return Ok((0..n).collect());
         }
 
-        let edges: Vec<(usize, usize, f64)> = graph
-            .edge_references()
-            .filter_map(|e| {
-                let i = e.source().index();
-                let j = e.target().index();
-                if i < j {
-                    Some((i, j, 1.0))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        self.detect_from_edges(n, &edges)
+        let adapter = PetgraphRef::from_graph(graph);
+        Ok(leiden_seeded(&adapter, self.resolution, self.seed))
     }
 
     fn resolution(&self) -> f64 {
@@ -283,185 +159,47 @@ impl CommunityDetection for Leiden {
     }
 }
 
-impl Leiden {
-    /// Phase 1: Local moving (similar to Louvain).
-    ///
-    /// Greedily move nodes to neighboring communities with best modularity gain.
-    fn local_moving_phase(&self, wg: &WeightedGraph, state: &mut CommunityState) -> bool {
-        let mut improved = false;
-        let mut queue: VecDeque<usize> = (0..wg.n).collect();
-        let mut in_queue = vec![true; wg.n];
+/// Adapter that exposes a `petgraph::UnGraph<N, f32>` as a `WeightedGraph`.
+///
+/// graphops's `WeightedGraph` impl for petgraph covers `f64` edge weights only;
+/// this adapter bridges the `f32` → `f64` conversion at the boundary.
+struct F32WeightedAdapter {
+    adj: Vec<Vec<(usize, f64)>>,
+}
 
-        while let Some(node) = queue.pop_front() {
-            in_queue[node] = false;
-            let current_comm = state.assignment[node];
-
-            // Find neighboring communities
-            let mut neighbor_comms: HashSet<usize> = HashSet::new();
-            for &(neighbor, _) in &wg.adj[node] {
-                let _ = neighbor_comms.insert(state.assignment[neighbor]);
-            }
-            let _ = neighbor_comms.insert(current_comm);
-
-            // Find best community
-            let mut best_comm = current_comm;
-            let mut best_gain = 0.0;
-
-            // Temporarily remove node from current community
-            state.comm_total_weight[current_comm] -= wg.degrees[node];
-
-            for &target_comm in &neighbor_comms {
-                let gain = wg.modularity_gain(
-                    node,
-                    target_comm,
-                    &state.assignment,
-                    &state.comm_total_weight,
-                    self.resolution,
-                );
-                if gain > best_gain + 1e-10 {
-                    best_gain = gain;
-                    best_comm = target_comm;
-                }
-            }
-
-            // Restore node to community (will be moved below if needed)
-            state.comm_total_weight[current_comm] += wg.degrees[node];
-
-            if best_comm != current_comm {
-                state.move_node(node, current_comm, best_comm, wg.degrees[node]);
-                improved = true;
-
-                // Add neighbors back to queue
-                for &(neighbor, _) in &wg.adj[node] {
-                    if !in_queue[neighbor] {
-                        queue.push_back(neighbor);
-                        in_queue[neighbor] = true;
-                    }
-                }
-            }
+impl F32WeightedAdapter {
+    fn from_graph<N>(graph: &UnGraph<N, f32>) -> Self {
+        let n = graph.node_count();
+        let mut adj: Vec<Vec<(usize, f64)>> = vec![Vec::new(); n];
+        for edge in graph.edge_references() {
+            let i = edge.source().index();
+            let j = edge.target().index();
+            let w = *edge.weight() as f64;
+            adj[i].push((j, w));
+            adj[j].push((i, w));
         }
-
-        improved
-    }
-
-    /// Phase 2: Refinement (Leiden's key innovation).
-    ///
-    /// Within each community from phase 1:
-    /// 1. Reset nodes to singletons
-    /// 2. Merge only within the community boundary
-    /// 3. Ensure each sub-community is connected
-    fn refinement_phase(&self, wg: &WeightedGraph, state: &mut CommunityState) {
-        // Get current partition (from phase 1)
-        let phase1_communities = state.assignment.clone();
-
-        // Find unique communities
-        let mut unique_comms: Vec<usize> = phase1_communities.to_vec();
-        unique_comms.sort_unstable();
-        unique_comms.dedup();
-
-        // Process each community independently
-        for &comm in &unique_comms {
-            // Get nodes in this community
-            let nodes_in_comm: Vec<usize> = (0..wg.n)
-                .filter(|&i| phase1_communities[i] == comm)
-                .collect();
-
-            if nodes_in_comm.len() <= 1 {
-                continue;
-            }
-
-            // Refine within this community
-            self.refine_community(wg, state, &nodes_in_comm);
-        }
-    }
-
-    /// Refine a single community.
-    ///
-    /// Ensures the community is well-connected by:
-    /// 1. Finding connected components within the community
-    /// 2. Splitting disconnected components into separate communities
-    fn refine_community(&self, wg: &WeightedGraph, state: &mut CommunityState, nodes: &[usize]) {
-        let node_set: HashSet<usize> = nodes.iter().copied().collect();
-
-        // Find connected components within this subset
-        let components = find_components_in_subset(wg, &node_set);
-
-        if components.len() <= 1 {
-            // Already connected, nothing to do
-            return;
-        }
-
-        // Split disconnected components into separate communities
-        let base_comm = state.n_communities;
-        state.n_communities += components.len() - 1;
-
-        // Extend comm_total_weight if needed
-        while state.comm_total_weight.len() < state.n_communities {
-            state.comm_total_weight.push(0.0);
-        }
-
-        // Keep first component in original community, assign others to new communities
-        for (idx, component) in components.iter().enumerate().skip(1) {
-            let new_comm = base_comm + idx - 1;
-            for &node in component {
-                let old_comm = state.assignment[node];
-                state.move_node(node, old_comm, new_comm, wg.degrees[node]);
-            }
-        }
+        Self { adj }
     }
 }
 
-/// Find connected components within a subset of nodes.
-fn find_components_in_subset(wg: &WeightedGraph, node_set: &HashSet<usize>) -> Vec<Vec<usize>> {
-    let mut visited = HashSet::new();
-    let mut components = Vec::new();
-
-    for &start in node_set {
-        if visited.contains(&start) {
-            continue;
-        }
-
-        let mut component = Vec::new();
-        let mut queue = VecDeque::new();
-        queue.push_back(start);
-
-        while let Some(node) = queue.pop_front() {
-            if !visited.insert(node) {
-                continue;
-            }
-            component.push(node);
-
-            for &(neighbor, _) in &wg.adj[node] {
-                if node_set.contains(&neighbor) && !visited.contains(&neighbor) {
-                    queue.push_back(neighbor);
-                }
-            }
-        }
-
-        if !component.is_empty() {
-            components.push(component);
-        }
+impl Graph for F32WeightedAdapter {
+    fn node_count(&self) -> usize {
+        self.adj.len()
     }
 
-    components
+    fn neighbors(&self, node: usize) -> Vec<usize> {
+        self.adj[node].iter().map(|(v, _)| *v).collect()
+    }
 }
 
-/// Renumber communities to consecutive integers starting at 0.
-fn renumber_communities(assignment: &[usize]) -> Vec<usize> {
-    let mut unique: Vec<usize> = assignment.to_vec();
-    unique.sort_unstable();
-    unique.dedup();
-
-    let mapping: HashMap<usize, usize> = unique
-        .into_iter()
-        .enumerate()
-        .map(|(new, old)| (old, new))
-        .collect();
-
-    assignment
-        .iter()
-        .map(|&c| mapping.get(&c).copied().unwrap_or(0))
-        .collect()
+impl WeightedGraph for F32WeightedAdapter {
+    fn edge_weight(&self, source: usize, target: usize) -> f64 {
+        self.adj[source]
+            .iter()
+            .find(|(v, _)| *v == target)
+            .map(|(_, w)| *w)
+            .unwrap_or(0.0)
+    }
 }
 
 #[cfg(test)]
@@ -530,13 +268,6 @@ mod tests {
 
     #[test]
     fn test_leiden_disconnected_within_community() {
-        // This is the key test that Louvain fails but Leiden should pass.
-        // Create a graph where naive merging could create disconnected communities.
-        //
-        // Structure: A--B--C  D--E (D,E disconnected from A,B,C)
-        // If Louvain merges all into one community, it's wrong.
-        // Leiden should detect and split.
-
         let mut graph = UnGraph::<(), ()>::new_undirected();
         let a = graph.add_node(());
         let b = graph.add_node(());
@@ -584,16 +315,11 @@ mod tests {
 
     #[test]
     fn test_leiden_resolution_parameter() {
-        // Resolution parameter affects community detection
-        // Note: Due to greedy local optima, higher resolution doesn't *guarantee*
-        // more communities, but both should produce valid partitions.
         let mut graph = UnGraph::<(), ()>::new_undirected();
 
-        // Create a larger structure
         for _ in 0..10 {
             let _ = graph.add_node(());
         }
-        // Connect as a chain
         for i in 0..9 {
             let n1 = petgraph::graph::NodeIndex::new(i);
             let n2 = petgraph::graph::NodeIndex::new(i + 1);
@@ -606,34 +332,27 @@ mod tests {
         let comms_low = low_res.detect(&graph).unwrap();
         let comms_high = high_res.detect(&graph).unwrap();
 
-        // Both should assign all nodes
         assert_eq!(comms_low.len(), 10);
         assert_eq!(comms_high.len(), 10);
 
-        let unique_low: HashSet<_> = comms_low.iter().collect();
-        let unique_high: HashSet<_> = comms_high.iter().collect();
-
-        // Both should produce valid partitions (at least 1 community)
-        assert!(!unique_low.is_empty());
-        assert!(!unique_high.is_empty());
+        assert!(!comms_low.is_empty());
+        assert!(!comms_high.is_empty());
     }
 
     #[test]
     fn test_leiden_connectivity_guarantee() {
-        // Verify that every community is internally connected
+        use std::collections::{HashMap, HashSet, VecDeque};
+
         let mut graph = UnGraph::<(), ()>::new_undirected();
 
-        // Create a moderately complex graph
         for _ in 0..20 {
             let _ = graph.add_node(());
         }
-        // Add some edges
         for i in 0..15 {
             let n1 = petgraph::graph::NodeIndex::new(i);
             let n2 = petgraph::graph::NodeIndex::new(i + 1);
             let _ = graph.add_edge(n1, n2, ());
         }
-        // Add some cross-links
         let _ = graph.add_edge(
             petgraph::graph::NodeIndex::new(0),
             petgraph::graph::NodeIndex::new(5),
@@ -648,13 +367,11 @@ mod tests {
         let leiden = Leiden::new();
         let communities = leiden.detect(&graph).unwrap();
 
-        // Group nodes by community
         let mut by_community: HashMap<usize, Vec<usize>> = HashMap::new();
         for (node, &comm) in communities.iter().enumerate() {
             by_community.entry(comm).or_default().push(node);
         }
 
-        // Verify each community is connected
         for (_comm, nodes) in by_community {
             if nodes.len() <= 1 {
                 continue;
@@ -662,7 +379,6 @@ mod tests {
 
             let node_set: HashSet<usize> = nodes.iter().copied().collect();
 
-            // Build subgraph adjacency
             let mut adj: HashMap<usize, Vec<usize>> = HashMap::new();
             for edge in graph.edge_references() {
                 let i = edge.source().index();
@@ -673,7 +389,6 @@ mod tests {
                 }
             }
 
-            // BFS from first node should reach all nodes
             let start = nodes[0];
             let mut visited = HashSet::new();
             let mut queue = VecDeque::new();
