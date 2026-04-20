@@ -1,6 +1,6 @@
 [package]
 name = "sheaf"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
@@ -29,7 +29,7 @@ kodama = { version = "0.3", optional = true }
 
 # Graph algorithms
 petgraph = { version = "0.6", optional = true }
-graphops = { git = "https://github.com/arclabs561/graphops", features = ["petgraph"], optional = true }
+graphops = { version = "0.2", features = ["petgraph"], optional = true }
 
 # kNN graph construction from embeddings (ecosystem crate)
 # Version here; dev workspace patches to path so we use one copy when building from dev.
