@@ -119,10 +119,7 @@ pub use traits::{Clustering, SoftClustering};
 
 // Re-export distance metric types from clump so users don't need a direct
 // clump dependency to select a metric.
-pub use clump::cluster::distance::{
-    CompositeDistance, CosineDistance, DistanceMetric, Euclidean, InnerProductDistance,
-    SquaredEuclidean,
-};
+pub use clump::cluster::distance::{CosineDistance, DistanceMetric, Euclidean, SquaredEuclidean};
 
 // Constrained clustering (COP-Kmeans, Wagstaff et al. 2001).
 pub use clump::cluster::constrained::{Constraint, CopKmeans};

@@ -1,4 +1,13 @@
 #![warn(missing_docs)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::useless_vec,
+        clippy::needless_range_loop
+    )
+)]
 //\! # sheaf
 //!
 //! Hierarchical abstraction: tree structures + reconciliation / conformal primitives for multi-resolution views.
@@ -42,10 +51,9 @@ pub use distribution_distance::{DistributionDistance, DistributionDistanceConfig
 
 #[cfg(feature = "cluster")]
 pub use cluster::{
-    Clustering, CompositeDistance, Constraint, CopKmeans, CorrelationClustering, CorrelationResult,
-    CosineDistance, DataRef, DenStream, DistanceMetric, Euclidean, FlatRef, Gmm,
-    HierarchicalClustering, InnerProductDistance, Kmeans, Linkage, MiniBatchKmeans, SignedEdge,
-    SoftClustering, SquaredEuclidean,
+    Clustering, Constraint, CopKmeans, CorrelationClustering, CorrelationResult, CosineDistance,
+    DataRef, DenStream, DistanceMetric, Euclidean, FlatRef, Gmm, HierarchicalClustering, Kmeans,
+    Linkage, MiniBatchKmeans, SignedEdge, SoftClustering, SquaredEuclidean,
 };
 
 #[cfg(feature = "community")]
