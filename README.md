@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/sheaf/badge.svg)](https://docs.rs/sheaf)
 [![CI](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml)
 
-Hierarchical structure in Rust: community detection (Leiden, Louvain),
+Hierarchical structure: community detection (Leiden, Louvain),
 reconciliation across forecast hierarchies, and conformal prediction
 that respects hierarchy constraints.
 
