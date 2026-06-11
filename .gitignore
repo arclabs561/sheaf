@@ -7,3 +7,4 @@ Cargo.lock
 sheaf-python/target/
 sheaf-python/.venv/
 sheaf-python/Cargo.lock
+/semver-checks/
