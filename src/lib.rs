@@ -8,7 +8,7 @@
         clippy::needless_range_loop
     )
 )]
-//\! # sheaf
+//! # sheaf
 //!
 //! Hierarchical abstraction: tree structures + reconciliation / conformal primitives for multi-resolution views.
 //!

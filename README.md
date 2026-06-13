@@ -12,7 +12,7 @@ that respects hierarchy constraints.
 
 Given a set of points or a graph, you want to find groups: k-means for embeddings, Leiden for networks, hierarchical clustering for dendrograms. When predictions have hierarchical structure (e.g., forecasts at country/region/city levels), they should be coherent -- the parts should sum to the whole. Conformal prediction can provide calibrated intervals that respect this structure.
 
-This library provides the algorithms. It is domain-agnostic; the stable contract is in [CONTRACT.md](CONTRACT.md).
+This library provides the algorithms. It is domain-agnostic.
 
 ## Examples
 
