@@ -16,6 +16,8 @@ This library provides the algorithms. It is domain-agnostic.
 
 ## Examples
 
+See [examples/README.md](examples/README.md) for the full runnable example map.
+
 **Embeddings to communities**. Build a kNN graph from 2D points and detect clusters via Leiden:
 
 ```bash
