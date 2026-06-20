@@ -89,6 +89,11 @@ clump = ["dep:clump"]
 rkhs = ["dep:rkhs", "ndarray"]
 wass = ["dep:wass", "ndarray"]
 
+# Compatibility alias for v0.1.8 users that enabled the old optional
+# `ndarray-linalg` dependency feature. The dependency was unused, but removing
+# the feature name is a SemVer break.
+ndarray-linalg = []
+
 [dev-dependencies]
 proptest = "1.9"
 criterion = { version = "0.7", features = ["html_reports"] }
