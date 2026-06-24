@@ -30,14 +30,14 @@ cargo run --example embedding_clustering --features knn-graph
 cargo run --example forecast_reconciliation
 ```
 
-Used by [`flowmatch`](https://github.com/arclabs561/flowmatch) (behind `--features sheaf-evals`) to evaluate whether generated samples preserve the cluster structure of real data -- for example, whether generated earthquake locations form the same geographic clusters as the USGS catalog.
+The clustering-evaluation metrics check whether two point sets share the same cluster structure: for example, whether a generated set of earthquake locations forms the same geographic clusters as the USGS catalog.
 
 ## What it provides
 
 - **Clustering**: k-means, DBSCAN, hierarchical clustering.
 - **Community detection**: kNN graph construction (feature-gated), Leiden/Louvain/label propagation.
 - **Hierarchy + conformal**: hierarchical reconciliation, split conformal prediction with coherence guarantees.
-- **Metrics**: clustering evaluation helpers (used by `flowmatch` sheaf-eval examples).
+- **Metrics**: clustering evaluation helpers.
 
 ## Custom distance metrics
 
