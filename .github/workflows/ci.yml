@@ -46,6 +46,11 @@ jobs:
         run: cargo nextest run
       - name: doc tests
         run: cargo test --doc
+      - name: run example assertions
+        run: |
+          cargo run --example neural_sheaf_diffusion
+          cargo run --example sheaf_clustering
+          cargo run --example sheaf_spectral
 
   semver:
     name: Semver check
