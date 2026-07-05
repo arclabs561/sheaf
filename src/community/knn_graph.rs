@@ -149,6 +149,7 @@ pub fn knn_graph_with_config(
     let params = HNSWParams {
         m: config.hnsw_m,
         ef_construction: config.hnsw_ef_construction,
+        auto_normalize: true,
         ..Default::default()
     };
     let mut hnsw = HNSWIndex::with_params(dim, params).map_err(|e| Error::Other(e.to_string()))?;

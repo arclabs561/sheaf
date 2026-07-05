@@ -8,6 +8,7 @@
 //!
 //! Run: cargo run --example sheaf_rmt
 
+use rmt::{empirical_spectral_density, mean_spacing_ratio, wigner_semicircle_density};
 use sheaf::CellularSheaf;
 
 #[allow(clippy::expect_used)]
@@ -135,11 +136,11 @@ fn main() {
     println!("--- Part 3: Level spacing statistics ---\n");
 
     // Structured vs random eigenvalue repulsion
-    let const_msr = mean_spacing_ratio_local(&const_eigs);
+    let const_msr = mean_spacing_ratio(&const_eigs);
     let random_sheaf = random_sheaf(n_nodes, &edges, stalk_dim, &mut rng);
     let random_lap = random_sheaf.laplacian();
     let random_eigs = sorted_eigenvalues(&random_lap);
-    let random_msr = mean_spacing_ratio_local(&random_eigs);
+    let random_msr = mean_spacing_ratio(&random_eigs);
 
     println!("  Mean spacing ratio (GOE ~ 0.53, Poisson ~ 0.39):");
     println!("    Constant sheaf: {const_msr:.4}");
@@ -186,63 +187,6 @@ fn sorted_eigenvalues(mat: &faer::Mat<f64>) -> Vec<f64> {
 /// Spectral gap: smallest non-zero eigenvalue (above tolerance).
 fn spectral_gap(eigs: &[f64]) -> f64 {
     eigs.iter().copied().find(|&e| e > 1e-8).unwrap_or(0.0)
-}
-
-/// Wigner semicircle density.
-fn wigner_semicircle_density(lambda: f64, sigma: f64) -> f64 {
-    let r = 2.0 * sigma;
-    if lambda.abs() > r {
-        return 0.0;
-    }
-    (2.0 / (std::f64::consts::PI * r * r)) * (r * r - lambda * lambda).sqrt()
-}
-
-/// Empirical spectral density via histogram.
-fn empirical_spectral_density(eigenvalues: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
-    if eigenvalues.is_empty() || bins == 0 {
-        return (vec![], vec![]);
-    }
-    let min = eigenvalues.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max = eigenvalues
-        .iter()
-        .cloned()
-        .fold(f64::NEG_INFINITY, f64::max);
-    if (max - min).abs() < 1e-10 {
-        return (vec![min], vec![1.0]);
-    }
-    let bin_width = (max - min) / bins as f64;
-    let mut counts = vec![0usize; bins];
-    for &ev in eigenvalues {
-        let idx = ((ev - min) / bin_width).floor() as usize;
-        let idx = idx.min(bins - 1);
-        counts[idx] += 1;
-    }
-    let n = eigenvalues.len() as f64;
-    let centers: Vec<f64> = (0..bins)
-        .map(|i| min + (i as f64 + 0.5) * bin_width)
-        .collect();
-    let densities: Vec<f64> = counts.iter().map(|&c| c as f64 / (n * bin_width)).collect();
-    (centers, densities)
-}
-
-/// Mean spacing ratio (local implementation to avoid pulling in rmt as a dep).
-fn mean_spacing_ratio_local(eigenvalues: &[f64]) -> f64 {
-    if eigenvalues.len() < 3 {
-        return 0.0;
-    }
-    let mut ratios = Vec::new();
-    for i in 0..(eigenvalues.len() - 2) {
-        let s1 = eigenvalues[i + 1] - eigenvalues[i];
-        let s2 = eigenvalues[i + 2] - eigenvalues[i + 1];
-        if s1 > 1e-15 && s2 > 1e-15 {
-            ratios.push(s1.min(s2) / s1.max(s2));
-        }
-    }
-    if ratios.is_empty() {
-        0.0
-    } else {
-        ratios.iter().sum::<f64>() / ratios.len() as f64
-    }
 }
 
 /// LCG-based pseudo-Gaussian via Box-Muller.
