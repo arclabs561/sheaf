@@ -1,6 +1,6 @@
 [package]
 name = "sheaf"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
@@ -39,7 +39,7 @@ rayon = { version = "1.10", optional = true }
 
 
 # Spectral clustering via graph Laplacians (ecosystem crate)
-lapl = { version = "0.1.2", optional = true }
+lapl = { version = "0.2", optional = true }
 
 # Kernel methods (ecosystem crate)
 rkhs = { version = "0.3.0", optional = true }
@@ -97,7 +97,7 @@ ndarray-linalg = []
 [dev-dependencies]
 proptest = "1.9"
 criterion = { version = "0.7", features = ["html_reports"] }
-lapl = "0.1.2"
+lapl = "0.2"
 ndarray = "0.16"
 clump = "0.5"
 rmt = "0.1.3"
