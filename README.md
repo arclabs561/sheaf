@@ -2,17 +2,16 @@
 
 [![crates.io](https://img.shields.io/crates/v/sheaf.svg)](https://crates.io/crates/sheaf)
 [![Documentation](https://docs.rs/sheaf/badge.svg)](https://docs.rs/sheaf)
-[![CI](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/sheaf/actions/workflows/ci.yml)
 
-Hierarchical structure: community detection (Leiden, Louvain),
-reconciliation across forecast hierarchies, and conformal prediction
-that respects hierarchy constraints.
+Sheaf and hierarchy algorithms.
+
+`sheaf` includes clustering, community detection, hierarchy reconciliation, and
+conformal intervals for tree-structured predictions.
 
 ## Problem
 
-Given a set of points or a graph, you want to find groups: k-means for embeddings, Leiden for networks, hierarchical clustering for dendrograms. When predictions have hierarchical structure (e.g., forecasts at country/region/city levels), they should be coherent -- the parts should sum to the whole. Conformal prediction can provide calibrated intervals that respect this structure.
-
-This library provides the algorithms. It is domain-agnostic.
+Use it for clustering points, detecting graph communities, and making
+tree-structured predictions sum to their parents.
 
 ## Examples
 

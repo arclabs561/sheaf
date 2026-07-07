@@ -2,7 +2,7 @@
 # https://github.com/repository-settings/app
 
 repository:
-  description: "Sheaf theory and community detection"
+  description: "Sheaf and hierarchy algorithms"
   homepage: "https://docs.rs/sheaf"
   private: false
   has_issues: true
