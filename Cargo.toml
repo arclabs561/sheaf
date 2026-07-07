@@ -1,6 +1,6 @@
 [package]
 name = "sheaf"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Arc <attobop@gmail.com>"]
 edition = "2021"
 rust-version = "1.80"
@@ -48,7 +48,7 @@ rkhs = { version = "0.3.0", optional = true }
 wass = { version = "0.2.2", optional = true }
 
 # Optional stochastic sampling
-kuji = { version = "0.1.7", optional = true }
+drawset = { version = "0.1.0", optional = true }
 
 [features]
 #
@@ -61,16 +61,17 @@ std = []
 cluster = ["std", "ndarray", "rand", "rand_distr", "clump", "dep:kodama"]
 community = ["std", "petgraph", "rand", "dep:graphops"]
 summarize = ["std"]
-full = ["cluster", "community", "summarize", "parallel", "serde", "knn-graph", "spectral-faer", "spectral-sparse", "rkhs", "wass", "kuji"]
+full = ["cluster", "community", "summarize", "parallel", "serde", "knn-graph", "spectral-faer", "spectral-sparse", "rkhs", "wass", "drawset"]
 
-# Use `kuji` for stochastic sampling.
-kuji = ["dep:kuji"]
+# Use `drawset` for stochastic sampling.
+drawset = ["dep:drawset"]
+kuji = ["drawset"]
 
 # Clustering evaluation metrics (always available, feature kept for backward compat)
 metrics = []
 
 # Spectral clustering methods
-spectral = ["lapl", "ndarray", "rkhs", "kuji"]
+spectral = ["lapl", "ndarray", "rkhs", "drawset"]
 spectral-faer = ["spectral", "lapl/faer"]
 spectral-sparse = ["spectral", "lapl/sparse"]
 
