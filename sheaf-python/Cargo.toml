@@ -2,7 +2,7 @@
 name = "sheaf-python"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.83"
 license = "MIT OR Apache-2.0"
 authors = ["Arc <attobop@gmail.com>"]
 description = "Python bindings for sheaf (Rust)."
@@ -17,8 +17,8 @@ doc = false
 
 [dependencies]
 sheaf = { path = "..", features = ["cluster", "community", "metrics", "knn-graph"] }
-pyo3 = "0.28"
-numpy = "0.28"
+pyo3 = "0.29.0"
+numpy = "0.29.0"
 faer = "0.19"
 petgraph = "0.6"
 
