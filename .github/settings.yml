@@ -17,5 +17,11 @@ repository:
   topics:
     - clustering
     - community-detection
+    - conformal-prediction
+    - graph-laplacian
+    - hierarchical-clustering
     - hierarchy
+    - machine-learning
     - rust
+    - sheaf-theory
+    - spectral-methods
