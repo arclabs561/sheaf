@@ -1,6 +1,6 @@
 //! Leiden algorithm for community detection.
 //!
-//! An improvement over Louvain that guarantees well-connected communities.
+//! A wrapper around the Leiden implementation in `graphops`.
 //!
 //! ## The Leiden Algorithm (Traag et al. 2019)
 //!
@@ -47,10 +47,7 @@ use graphops::{leiden_seeded, leiden_weighted_seeded, Graph, PetgraphRef, Weight
 use petgraph::graph::UnGraph;
 use petgraph::visit::EdgeRef;
 
-/// Leiden community detection algorithm.
-///
-/// Guarantees well-connected communities through a refinement phase
-/// that Louvain lacks.
+/// Leiden community detection backed by `graphops`.
 #[derive(Debug, Clone)]
 pub struct Leiden {
     /// Resolution parameter (gamma). Higher = smaller communities.

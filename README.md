@@ -23,7 +23,8 @@ See [examples/README.md](examples/README.md) for the full runnable example map.
 cargo run --example embedding_clustering --features knn-graph
 ```
 
-**Forecast reconciliation**. Given a tree of predictions, reconcile them so they are structurally coherent, then produce calibrated prediction intervals:
+**Forecast reconciliation**. Given a tree of predictions, reconcile the point
+forecasts to the hierarchy, then produce marginal conformal intervals:
 
 ```bash
 cargo run --example forecast_reconciliation
@@ -35,7 +36,7 @@ The clustering-evaluation metrics check whether two point sets share the same cl
 
 - **Clustering**: k-means, DBSCAN, hierarchical clustering.
 - **Community detection**: kNN graph construction (feature-gated), Leiden/Louvain/label propagation.
-- **Hierarchy + conformal**: hierarchical reconciliation, split conformal prediction with coherence guarantees.
+- **Hierarchy + conformal**: hierarchical point-forecast reconciliation and split conformal intervals.
 - **Metrics**: clustering evaluation helpers.
 
 ## Custom distance metrics
@@ -47,10 +48,11 @@ Implement `DistanceMetric` for your own.
 ```rust
 use sheaf::{Kmeans, CosineDistance};
 
-let km = Kmeans::with_metric(8, CosineDistance)
+let data = vec![vec![1.0, 0.0], vec![0.9, 0.1], vec![0.0, 1.0]];
+let km = Kmeans::with_metric(2, CosineDistance)
     .with_seed(42)
     .with_seeding_alpha(2.0); // oversampling factor for k-means++
-let result = km.fit(&data)?;
+let labels = km.fit(&data)?;
 ```
 
 ```rust
@@ -79,7 +81,7 @@ let s = h_tree.summing_matrix();
 let mut cp = HierarchicalConformal::new(s, ReconciliationMethod::Ols);
 cp.calibrate(&y_calib, &y_hat_calib, 0.1)?; // 90% coverage
 
-// Coherent prediction intervals
+// Marginal prediction intervals around reconciled forecasts
 let (lower, upper) = cp.predict_intervals(&y_hat_test)?;
 ```
 
