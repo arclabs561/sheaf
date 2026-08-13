@@ -11,7 +11,7 @@ This contract defines the stable surface: what `sheaf` promises to callers.
   - hard clustering (k-means, hierarchical, DBSCAN, spectral, etc.)
   - soft clustering (GMM) when enabled
 - **Community detection** on graphs:
-  - Louvain / Leiden / label propagation
+  - Louvain, connectivity-refined Louvain, and label propagation
   - optional kNN graph construction from embeddings (feature-gated)
 - **Hierarchy primitives**:
   - dendrogram/tree representations

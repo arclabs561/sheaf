@@ -38,28 +38,16 @@
 //!
 //! ## Algorithms
 //!
-//! ### Leiden (Recommended)
+//! ### Connectivity-refined Louvain
 //!
-//! The Leiden algorithm ([Traag et al. 2019](https://arxiv.org/abs/1810.08473))
-//! improves on Louvain with a critical guarantee: **communities are always
-//! well-connected**.
-//!
-//! **Three phases**:
-//! 1. **Local moving**: Greedily move nodes to improve modularity
-//! 2. **Refinement**: Split communities that aren't internally connected
-//! 3. **Aggregation**: Contract graph, repeat
-//!
-//! The refinement phase is the key innovation. Louvain skips this, which can
-//! produce pathological results—nodes labeled as "same community" with no
-//! path between them.
+//! [`LouvainConnected`] applies Louvain local moving, splits disconnected
+//! components, and aggregates the result. It guarantees connected output
+//! communities. It does not implement Leiden's constrained-merge refinement.
 //!
 //! ### Louvain
 //!
 //! The original fast modularity algorithm ([Blondel et al. 2008](https://arxiv.org/abs/0803.0476)).
-//! Still useful as a baseline, but **can produce disconnected communities**.
-//!
-//! In experiments, Louvain produced disconnected communities in up to 16% of
-//! cases when run iteratively. Use Leiden instead for production.
+//! It can return disconnected communities in some graphs.
 //!
 //! ### Label Propagation
 //!
@@ -70,7 +58,7 @@
 //!
 //! ```rust
 //! use petgraph::graph::UnGraph;
-//! use sheaf::community::{Leiden, CommunityDetection};
+//! use sheaf::community::{CommunityDetection, LouvainConnected};
 //!
 //! // Build a graph
 //! let mut graph = UnGraph::<(), ()>::new_undirected();
@@ -81,8 +69,8 @@
 //! graph.add_edge(b, c, ());
 //!
 //! // Detect communities
-//! let leiden = Leiden::new();
-//! let communities = leiden.detect(&graph).unwrap();
+//! let detector = LouvainConnected::new();
+//! let communities = detector.detect(&graph).unwrap();
 //! // communities[i] = community ID for node i
 //! ```
 //!
@@ -102,7 +90,7 @@ mod traits;
 mod knn_graph;
 
 pub use label_prop::LabelPropagation;
-pub use leiden::Leiden;
+pub use leiden::{Leiden, LouvainConnected};
 pub use louvain::Louvain;
 pub use traits::CommunityDetection;
 

@@ -210,14 +210,29 @@ def test_fowlkes_mallows_numpy():
 # ---------------------------------------------------------------------------
 
 
-def test_leiden_basic():
-    """Leiden on a triangle should put all nodes in one community."""
+def test_louvain_connected_basic():
+    """Connectivity-refined Louvain groups a triangle."""
     edges = [(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]
-    communities = cohera.leiden(edges, n_nodes=3, seed=42)
+    communities = cohera.louvain_connected(edges, n_nodes=3, seed=42)
     assert isinstance(communities, np.ndarray)
     assert communities.dtype == np.int64
     assert len(communities) == 3
     assert communities[0] == communities[1] == communities[2]
+
+
+def test_leiden_is_compatibility_alias():
+    edges = [
+        (0, 4, 1.0),
+        (1, 2, 1.0),
+        (1, 3, 1.0),
+        (1, 4, 1.0),
+        (2, 3, 1.0),
+        (2, 4, 1.0),
+        (3, 5, 1.0),
+    ]
+    canonical = cohera.louvain_connected(edges, n_nodes=6, seed=42)
+    compatibility = cohera.leiden(edges, n_nodes=6, seed=42)
+    np.testing.assert_array_equal(canonical, compatibility)
 
 
 def test_louvain_basic():
@@ -381,8 +396,8 @@ def test_knn_graph_list_input():
     assert len(edges) > 0
 
 
-def test_knn_graph_to_leiden_pipeline():
-    """End-to-end: embeddings -> knn graph -> leiden."""
+def test_knn_graph_to_louvain_connected_pipeline():
+    """End-to-end: embeddings -> kNN graph -> connectivity-refined Louvain."""
     embeddings = _normalize(np.array([
         [1.0, 0.0, 0.0],
         [0.9, 0.1, 0.0],
@@ -392,7 +407,7 @@ def test_knn_graph_to_leiden_pipeline():
         [0.05, 0.95, 0.0],
     ], dtype=np.float32))
     edges = cohera.knn_graph(embeddings, k=2)
-    labels = cohera.leiden(edges, n_nodes=len(embeddings), seed=42)
+    labels = cohera.louvain_connected(edges, n_nodes=len(embeddings), seed=42)
     assert len(labels) == 6
     # Items 0-2 should be in one cluster, 3-5 in another
     assert labels[0] == labels[1] == labels[2]

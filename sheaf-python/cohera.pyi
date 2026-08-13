@@ -158,13 +158,13 @@ class HierarchicalConformal:
         ...
     def __repr__(self) -> str: ...
 
-def leiden(
+def louvain_connected(
     edges: list[tuple[int, int, float]],
     n_nodes: int,
     resolution: float = 1.0,
     seed: int | None = None,
 ) -> npt.NDArray[np.int64]:
-    """Leiden community detection on a weighted undirected graph.
+    """Connectivity-refined Louvain on a weighted undirected graph.
 
     Args:
         edges: Edge list as [(source, target, weight), ...].
@@ -175,6 +175,15 @@ def leiden(
     Returns:
         Community assignment for each node, dtype int64.
     """
+    ...
+
+def leiden(
+    edges: list[tuple[int, int, float]],
+    n_nodes: int,
+    resolution: float = 1.0,
+    seed: int | None = None,
+) -> npt.NDArray[np.int64]:
+    """Compatibility name for :func:`louvain_connected`."""
     ...
 
 def louvain(
@@ -216,7 +225,7 @@ def knn_graph(
     """Build a k-nearest-neighbor graph from embeddings.
 
     Uses HNSW for approximate nearest neighbor search. The resulting edge
-    list can be passed directly to leiden/louvain/label_propagation.
+    list can be passed directly to louvain_connected/louvain/label_propagation.
 
     Args:
         embeddings: 2D array of shape (n, dim). Each row is an embedding.

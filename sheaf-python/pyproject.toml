@@ -5,12 +5,12 @@ build-backend = "maturin"
 [project]
 name = "cohera"
 version = "0.1.1"
-description = "Hierarchical coherence: forecast reconciliation (OLS, WLS, MinTrace), conformal prediction, community detection (Leiden, Louvain)."
+description = "Hierarchical forecast reconciliation, conformal prediction, and community detection."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT OR Apache-2.0" }
 authors = [{ name = "Arc", email = "attobop@gmail.com" }]
-keywords = ["hierarchical", "reconciliation", "conformal-prediction", "leiden", "community-detection"]
+keywords = ["hierarchical", "reconciliation", "conformal-prediction", "louvain", "community-detection"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",

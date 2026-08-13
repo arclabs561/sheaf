@@ -1,6 +1,7 @@
 # cohera
 
-Hierarchical forecast reconciliation (OLS, WLS, MinTrace), conformal prediction intervals, community detection (Leiden, Louvain, Label Propagation), and clustering evaluation metrics. Backed by a Rust implementation.
+Hierarchical forecast reconciliation, conformal prediction intervals, community
+detection, and clustering evaluation metrics.
 
 Python bindings for the [sheaf](https://crates.io/crates/sheaf) Rust crate.
 
@@ -21,7 +22,7 @@ reconciled = cohera.reconcile(s, base, method="ols")
 
 # Community detection on a weighted graph
 edges = [(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]
-communities = cohera.leiden(edges, n_nodes=3, resolution=1.0)
+communities = cohera.louvain_connected(edges, n_nodes=3, resolution=1.0)
 
 # Dendrogram: build from merge history, cut to k clusters
 merges = [(0, 1, 0.5, 2), (2, 3, 0.7, 2), (4, 5, 1.0, 4)]
@@ -33,7 +34,7 @@ import numpy as np
 embeddings = np.random.randn(100, 64).astype(np.float32)
 embeddings /= np.linalg.norm(embeddings, axis=1, keepdims=True)
 edges = cohera.knn_graph(embeddings, k=10)
-communities = cohera.leiden(edges, n_nodes=100)
+communities = cohera.louvain_connected(edges, n_nodes=100)
 
 # Clustering evaluation
 nmi_score = cohera.nmi([0, 0, 1, 1], [0, 0, 1, 1])  # 1.0
@@ -54,7 +55,8 @@ ari_score = cohera.ari([0, 0, 1, 1], [0, 0, 1, 1])  # 1.0
 | `HierarchicalConformal` | Conformal predictor with hierarchical reconciliation |
 | `HierarchicalConformal.calibrate` | Calibrate intervals from held-out data |
 | `HierarchicalConformal.predict` | Produce reconciled (lower, upper) prediction intervals |
-| `leiden` | Leiden community detection |
+| `louvain_connected` | Louvain with disconnected communities split |
+| `leiden` | Compatibility name for `louvain_connected` |
 | `louvain` | Louvain community detection |
 | `label_propagation` | Label propagation community detection |
 | `nmi` | Normalized Mutual Information |

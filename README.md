@@ -17,7 +17,8 @@ tree-structured predictions sum to their parents.
 
 See [examples/README.md](examples/README.md) for the full runnable example map.
 
-**Embeddings to communities**. Build a kNN graph from 2D points and detect clusters via Leiden:
+**Embeddings to communities**. Build a kNN graph from 2D points and detect clusters
+with connectivity-refined Louvain:
 
 ```bash
 cargo run --example embedding_clustering --features knn-graph
@@ -35,7 +36,8 @@ The clustering-evaluation metrics check whether two point sets share the same cl
 ## What it provides
 
 - **Clustering**: k-means, DBSCAN, hierarchical clustering.
-- **Community detection**: kNN graph construction (feature-gated), Leiden/Louvain/label propagation.
+- **Community detection**: kNN graph construction (feature-gated), Louvain with or
+  without connectivity refinement, and label propagation.
 - **Hierarchy + conformal**: hierarchical point-forecast reconciliation and split conformal intervals.
 - **Metrics**: clustering evaluation helpers.
 

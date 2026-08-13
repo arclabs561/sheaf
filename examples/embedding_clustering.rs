@@ -1,17 +1,17 @@
-//! Embedding clustering: kNN graph + Leiden community detection.
+//! Embedding clustering: kNN graph + connectivity-refined Louvain.
 //!
 //! Generates 250 points in 8D arranged in 4 clusters with Gaussian noise,
-//! builds a kNN graph via HNSW, and runs Leiden to recover communities.
+//! builds a kNN graph via HNSW, and runs connectivity-refined Louvain.
 //! Prints cluster sizes and a purity metric comparing recovered communities
 //! to ground-truth labels.
 //!
 //! Pipeline:
-//!   synthetic embeddings -> vicinity (HNSW) -> kNN graph -> Leiden -> communities
+//!   synthetic embeddings -> vicinity (HNSW) -> kNN graph -> communities
 //!
 //! Requires: `cargo run -p sheaf --example embedding_clustering --features knn-graph`
 
 use sheaf::community::CommunityDetection;
-use sheaf::{knn_graph_with_config, KnnGraphConfig, Leiden, WeightFunction};
+use sheaf::{knn_graph_with_config, KnnGraphConfig, LouvainConnected, WeightFunction};
 use std::collections::BTreeMap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -102,9 +102,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         graph.edge_count()
     );
 
-    // Run Leiden.
-    let leiden = Leiden::new().with_resolution(1.0);
-    let labels = leiden.detect(&graph)?;
+    let detector = LouvainConnected::new().with_resolution(1.0);
+    let labels = detector.detect(&graph)?;
 
     // Community summary.
     let mut by_comm: BTreeMap<usize, Vec<usize>> = BTreeMap::new();

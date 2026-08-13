@@ -1,6 +1,5 @@
 use numpy::{
-    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2,
-    PyUntypedArrayMethods,
+    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods,
 };
 use pyo3::prelude::*;
 
@@ -8,7 +7,7 @@ use faer::Mat;
 use petgraph::graph::UnGraph;
 use petgraph::visit::EdgeRef;
 use sheaf::community::{
-    knn_graph_from_embeddings, CommunityDetection, LabelPropagation, Leiden, Louvain,
+    knn_graph_from_embeddings, CommunityDetection, LabelPropagation, Louvain, LouvainConnected,
 };
 use sheaf::hierarchy::{Dendrogram as RustDendrogram, HierarchyTree};
 use sheaf::reconciliation::{ReconciliationMethod, SummingMatrix};
@@ -88,9 +87,10 @@ fn col_to_vec(mat: &Mat<f64>) -> Vec<f64> {
 fn edges_to_ungraph(edges: Vec<(usize, usize, f64)>, n_nodes: usize) -> PyResult<UnGraph<(), f32>> {
     for &(i, j, _) in edges.iter() {
         if i >= n_nodes || j >= n_nodes {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("edge ({}, {}) exceeds n_nodes={}", i, j, n_nodes)
-            ));
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "edge ({}, {}) exceeds n_nodes={}",
+                i, j, n_nodes
+            )));
         }
     }
     let mut graph = UnGraph::<(), f32>::new_undirected();
@@ -159,9 +159,10 @@ fn extract_labels(obj: &Bound<'_, pyo3::PyAny>) -> PyResult<Vec<usize>> {
         let vals = arr.as_array().to_vec();
         for &v in vals.iter() {
             if v < 0 {
-                return Err(pyo3::exceptions::PyValueError::new_err(
-                    format!("negative label {} not supported in metrics (filter noise labels first)", v)
-                ));
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "negative label {} not supported in metrics (filter noise labels first)",
+                    v
+                )));
             }
         }
         return Ok(vals.iter().map(|&v| v as usize).collect());
@@ -170,9 +171,10 @@ fn extract_labels(obj: &Bound<'_, pyo3::PyAny>) -> PyResult<Vec<usize>> {
         let vals = arr.as_array().to_vec();
         for &v in vals.iter() {
             if v < 0 {
-                return Err(pyo3::exceptions::PyValueError::new_err(
-                    format!("negative label {} not supported in metrics (filter noise labels first)", v)
-                ));
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "negative label {} not supported in metrics (filter noise labels first)",
+                    v
+                )));
             }
         }
         return Ok(vals.iter().map(|&v| v as usize).collect());
@@ -184,9 +186,10 @@ fn extract_labels(obj: &Bound<'_, pyo3::PyAny>) -> PyResult<Vec<usize>> {
     let vals: Vec<i64> = obj.extract()?;
     for &v in vals.iter() {
         if v < 0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("negative label {} not supported in metrics (filter noise labels first)", v)
-            ));
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "negative label {} not supported in metrics (filter noise labels first)",
+                v
+            )));
         }
     }
     Ok(vals.iter().map(|&v| v as usize).collect())
@@ -353,7 +356,7 @@ impl HierarchicalConformal {
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
         if !self.calibrated {
             return Err(pyo3::exceptions::PyRuntimeError::new_err(
-                "must call calibrate() before predict()"
+                "must call calibrate() before predict()",
             ));
         }
         let yh = extract_vec1d(y_hat)?;
@@ -376,7 +379,7 @@ impl HierarchicalConformal {
 // Community detection
 // ---------------------------------------------------------------------------
 
-/// Leiden community detection on a weighted undirected graph.
+/// Connectivity-refined Louvain on a weighted undirected graph.
 ///
 /// Args:
 ///     edges: Edge list as [(source, target, weight), ...].
@@ -389,7 +392,7 @@ impl HierarchicalConformal {
 ///     numpy.ndarray: Community assignment for each node, dtype int64.
 #[pyfunction]
 #[pyo3(signature = (edges, n_nodes, resolution = 1.0, seed = None))]
-fn leiden(
+fn louvain_connected(
     py: Python<'_>,
     edges: Vec<(usize, usize, f64)>,
     n_nodes: usize,
@@ -397,13 +400,26 @@ fn leiden(
     seed: Option<u64>,
 ) -> PyResult<Bound<'_, PyArray1<i64>>> {
     let graph = edges_to_ungraph(edges, n_nodes)?;
-    let mut det = Leiden::new().with_resolution(resolution);
+    let mut det = LouvainConnected::new().with_resolution(resolution);
     if let Some(s) = seed {
         det = det.with_seed(s);
     }
     let result = det.detect_weighted(&graph).map_err(sheaf_err)?;
     let i64_result: Vec<i64> = result.into_iter().map(|v| v as i64).collect();
     Ok(i64_result.into_pyarray(py))
+}
+
+/// Compatibility name for connectivity-refined Louvain.
+#[pyfunction]
+#[pyo3(signature = (edges, n_nodes, resolution = 1.0, seed = None))]
+fn leiden(
+    py: Python<'_>,
+    edges: Vec<(usize, usize, f64)>,
+    n_nodes: usize,
+    resolution: f64,
+    seed: Option<u64>,
+) -> PyResult<Bound<'_, PyArray1<i64>>> {
+    louvain_connected(py, edges, n_nodes, resolution, seed)
 }
 
 /// Louvain community detection on a weighted undirected graph.
@@ -466,7 +482,10 @@ fn label_propagation(
 /// Returns:
 ///     float: NMI in [0, 1]. 1.0 means identical clusterings.
 #[pyfunction]
-fn nmi(labels_true: &Bound<'_, pyo3::PyAny>, labels_pred: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
+fn nmi(
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
+) -> PyResult<f64> {
     let a = extract_labels(labels_true)?;
     let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::nmi(&a, &b))
@@ -481,7 +500,10 @@ fn nmi(labels_true: &Bound<'_, pyo3::PyAny>, labels_pred: &Bound<'_, pyo3::PyAny
 /// Returns:
 ///     float: ARI in [-1, 1]. 1.0 means identical, 0.0 means random.
 #[pyfunction]
-fn ari(labels_true: &Bound<'_, pyo3::PyAny>, labels_pred: &Bound<'_, pyo3::PyAny>) -> PyResult<f64> {
+fn ari(
+    labels_true: &Bound<'_, pyo3::PyAny>,
+    labels_pred: &Bound<'_, pyo3::PyAny>,
+) -> PyResult<f64> {
     let a = extract_labels(labels_true)?;
     let b = extract_labels(labels_pred)?;
     Ok(sheaf::metrics::ari(&a, &b))
@@ -616,11 +638,7 @@ impl Dendrogram {
     ///
     /// Returns:
     ///     numpy.ndarray: Cluster label for each item, dtype int64.
-    fn cut_at_distance<'py>(
-        &self,
-        py: Python<'py>,
-        threshold: f64,
-    ) -> Bound<'py, PyArray1<i64>> {
+    fn cut_at_distance<'py>(&self, py: Python<'py>, threshold: f64) -> Bound<'py, PyArray1<i64>> {
         let labels = self.inner.cut_at_distance(threshold);
         let i64_labels: Vec<i64> = labels.into_iter().map(|v| v as i64).collect();
         i64_labels.into_pyarray(py)
@@ -633,11 +651,7 @@ impl Dendrogram {
     ///
     /// Returns:
     ///     numpy.ndarray: Cluster label for each item, dtype int64.
-    fn cut_to_k<'py>(
-        &self,
-        py: Python<'py>,
-        k: usize,
-    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+    fn cut_to_k<'py>(&self, py: Python<'py>, k: usize) -> PyResult<Bound<'py, PyArray1<i64>>> {
         let labels = self.inner.cut_to_k(k).map_err(sheaf_err)?;
         let i64_labels: Vec<i64> = labels.into_iter().map(|v| v as i64).collect();
         Ok(i64_labels.into_pyarray(py))
@@ -683,7 +697,7 @@ impl Dendrogram {
 /// Build a k-nearest-neighbor graph from embeddings.
 ///
 /// Uses HNSW for approximate nearest neighbor search. The resulting edge
-/// list can be passed directly to leiden/louvain/label_propagation.
+/// list can be passed directly to louvain_connected/louvain/label_propagation.
 ///
 /// Args:
 ///     embeddings: 2D array of shape (n, dim), dtype float32. Each row is
@@ -695,10 +709,7 @@ impl Dendrogram {
 ///         Weights are similarity scores (higher = more similar).
 #[pyfunction]
 #[pyo3(signature = (embeddings, k = 10))]
-fn knn_graph(
-    embeddings: &Bound<'_, pyo3::PyAny>,
-    k: usize,
-) -> PyResult<Vec<(usize, usize, f64)>> {
+fn knn_graph(embeddings: &Bound<'_, pyo3::PyAny>, k: usize) -> PyResult<Vec<(usize, usize, f64)>> {
     // Accept numpy f32 2D array or list[list[float]]
     let vecs: Vec<Vec<f32>> = if let Ok(arr) = embeddings.extract::<PyReadonlyArray2<'_, f32>>() {
         let shape = arr.shape();
@@ -730,13 +741,7 @@ fn knn_graph(
     // Convert petgraph edges to tuples
     let edges: Vec<(usize, usize, f64)> = graph
         .edge_references()
-        .map(|e| {
-            (
-                e.source().index(),
-                e.target().index(),
-                *e.weight() as f64,
-            )
-        })
+        .map(|e| (e.source().index(), e.target().index(), *e.weight() as f64))
         .collect();
 
     Ok(edges)
@@ -799,6 +804,7 @@ fn cohera(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<HierarchicalConformal>()?;
 
     // Community detection
+    m.add_function(wrap_pyfunction!(louvain_connected, m)?)?;
     m.add_function(wrap_pyfunction!(leiden, m)?)?;
     m.add_function(wrap_pyfunction!(louvain, m)?)?;
     m.add_function(wrap_pyfunction!(label_propagation, m)?)?;

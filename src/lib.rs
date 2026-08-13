@@ -57,7 +57,7 @@ pub use cluster::{
 };
 
 #[cfg(feature = "community")]
-pub use community::{CommunityDetection, LabelPropagation, Leiden, Louvain};
+pub use community::{CommunityDetection, LabelPropagation, Leiden, Louvain, LouvainConnected};
 
 #[cfg(feature = "knn-graph")]
 pub use community::{

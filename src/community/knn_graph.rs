@@ -6,12 +6,12 @@
 //! - Edges connect each node to its k nearest neighbors
 //! - Edge weights are similarity scores (higher = more similar)
 //!
-//! The resulting graph can be passed directly to Leiden/Louvain for clustering.
+//! The resulting graph can be passed to the community detectors in this crate.
 //!
 //! # The Connection: From Embeddings to Communities
 //!
 //! ```text
-//! Embeddings → vicinity (HNSW) → kNN Graph → Leiden → Communities
+//! Embeddings → vicinity (HNSW) → kNN Graph → Communities
 //! ```
 //!
 //! This is the algorithmic pipeline behind many modern clustering approaches:
@@ -32,7 +32,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use sheaf::community::{knn_graph_from_embeddings, Leiden, CommunityDetection};
+//! use sheaf::community::{knn_graph_from_embeddings, CommunityDetection, LouvainConnected};
 //!
 //! // Your embeddings (e.g., from sentence-transformers)
 //! let embeddings: Vec<Vec<f32>> = /* ... */;
@@ -41,8 +41,8 @@
 //! let graph = knn_graph_from_embeddings(&embeddings, 10)?;
 //!
 //! // Detect communities
-//! let leiden = Leiden::new();
-//! let communities = leiden.detect(&graph)?;
+//! let detector = LouvainConnected::new();
+//! let communities = detector.detect(&graph)?;
 //! ```
 //!
 //! # Performance Considerations

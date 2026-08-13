@@ -1,35 +1,15 @@
-//! Leiden algorithm for community detection.
+//! Connectivity-refined Louvain community detection.
 //!
-//! A wrapper around the Leiden implementation in `graphops`.
+//! This module wraps `graphops`' connectivity-refined Louvain implementation.
+//! It splits disconnected components after local moving, but does not implement
+//! Leiden's constrained-merge refinement phase.
 //!
-//! ## The Leiden Algorithm (Traag et al. 2019)
+//! ## Semantic boundary
 //!
-//! Leiden fixes Louvain's fundamental flaw: Louvain can create disconnected
-//! communities because it never re-examines decisions within a community.
-//!
-//! ### Three Phases
-//!
-//! 1. **Local Moving**: Like Louvain, greedily move nodes to best community.
-//!
-//! 2. **Refinement**: The key innovation. Within each community from phase 1:
-//!    - Reset all nodes to singletons
-//!    - Merge only within the community's boundary
-//!    - Check that each merge maintains connectivity
-//!
-//! 3. **Aggregation**: Build meta-graph and recurse.
-//!
-//! ### Why Refinement Matters
-//!
-//! ```text
-//! Louvain can produce:        Leiden guarantees:
-//!     A---B                       A---B
-//!         |                           |
-//!     C   D                       C   D
-//!                                 (C in separate community)
-//! [A,B,C,D] all in one         [A,B,D] connected, [C] alone
-//! community despite C
-//! being disconnected!
-//! ```
+//! Connectivity splitting is weaker than the Leiden algorithm (Traag et al.
+//! 2019). Leiden additionally performs constrained merge refinement and can
+//! therefore return a different partition even when both results contain only
+//! connected communities.
 //!
 //! ## Complexity
 //!
@@ -38,18 +18,20 @@
 //!
 //! ## References
 //!
-//! Traag, Waltman, van Eck (2019). "From Louvain to Leiden: guaranteeing
-//! well-connected communities." Scientific Reports 9, 5233.
+//! Blondel et al. (2008). "Fast unfolding of communities in large networks."
 
 use super::traits::CommunityDetection;
 use crate::error::{Error, Result};
-use graphops::{leiden_seeded, leiden_weighted_seeded, Graph, PetgraphRef, WeightedGraph};
+use graphops::{
+    leiden_seeded as louvain_connected_seeded,
+    leiden_weighted_seeded as louvain_connected_weighted_seeded, Graph, PetgraphRef, WeightedGraph,
+};
 use petgraph::graph::UnGraph;
 use petgraph::visit::EdgeRef;
 
-/// Leiden community detection backed by `graphops`.
+/// Louvain community detection with a connected-community guarantee.
 #[derive(Debug, Clone)]
-pub struct Leiden {
+pub struct LouvainConnected {
     /// Resolution parameter (gamma). Higher = smaller communities.
     resolution: f64,
     /// Maximum iterations per phase (stored but not forwarded; graphops runs to convergence).
@@ -62,8 +44,8 @@ pub struct Leiden {
     seed: u64,
 }
 
-impl Leiden {
-    /// Create a new Leiden detector.
+impl LouvainConnected {
+    /// Create a new connectivity-refined Louvain detector.
     pub fn new() -> Self {
         Self {
             resolution: 1.0,
@@ -126,17 +108,21 @@ impl Leiden {
         }
 
         let adapter = F32WeightedAdapter::from_graph(graph);
-        Ok(leiden_weighted_seeded(&adapter, self.resolution, self.seed))
+        Ok(louvain_connected_weighted_seeded(
+            &adapter,
+            self.resolution,
+            self.seed,
+        ))
     }
 }
 
-impl Default for Leiden {
+impl Default for LouvainConnected {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl CommunityDetection for Leiden {
+impl CommunityDetection for LouvainConnected {
     /// Detect communities in an unweighted graph (all edges have weight 1.0).
     fn detect<N, E>(&self, graph: &UnGraph<N, E>) -> Result<Vec<usize>> {
         let n = graph.node_count();
@@ -148,13 +134,23 @@ impl CommunityDetection for Leiden {
         }
 
         let adapter = PetgraphRef::from_graph(graph);
-        Ok(leiden_seeded(&adapter, self.resolution, self.seed))
+        Ok(louvain_connected_seeded(
+            &adapter,
+            self.resolution,
+            self.seed,
+        ))
     }
 
     fn resolution(&self) -> f64 {
         self.resolution
     }
 }
+
+/// Compatibility name for [`LouvainConnected`].
+///
+/// Despite the historical name, this algorithm is connectivity-refined
+/// Louvain, not the Leiden algorithm.
+pub type Leiden = LouvainConnected;
 
 /// Adapter that exposes a `petgraph::UnGraph<N, f32>` as a `WeightedGraph`.
 ///
@@ -410,5 +406,42 @@ mod tests {
                 "Community is not fully connected!"
             );
         }
+    }
+
+    #[test]
+    fn frozen_counterexample_differs_from_true_leiden() {
+        let mut graph = UnGraph::<(), ()>::new_undirected();
+        let nodes: Vec<_> = (0..6).map(|_| graph.add_node(())).collect();
+        for (a, b) in [(0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 5)] {
+            let _ = graph.add_edge(nodes[a], nodes[b], ());
+        }
+
+        let labels = LouvainConnected::new()
+            .with_seed(42)
+            .detect(&graph)
+            .unwrap();
+
+        // Frozen oracle from leidenalg 0.12.0 + igraph 1.0.0 using
+        // RBConfigurationVertexPartition, resolution 1, seed 42, and
+        // n_iterations=-1: {0,4} and {1,2,3,5}.
+        let leiden_oracle = [1, 0, 0, 0, 1, 0];
+        assert_eq!(labels, [0, 1, 1, 2, 0, 2]);
+        assert!(!same_partition(&labels, &leiden_oracle));
+    }
+
+    #[test]
+    fn leiden_compatibility_name_has_partition_parity() {
+        let mut graph = UnGraph::<(), ()>::new_undirected();
+        let a = graph.add_node(());
+        let b = graph.add_node(());
+        let _ = graph.add_edge(a, b, ());
+
+        let canonical = LouvainConnected::new().with_seed(7).detect(&graph).unwrap();
+        let compatibility = Leiden::new().with_seed(7).detect(&graph).unwrap();
+        assert_eq!(canonical, compatibility);
+    }
+
+    fn same_partition(a: &[usize], b: &[usize]) -> bool {
+        (0..a.len()).all(|i| (0..a.len()).all(|j| (a[i] == a[j]) == (b[i] == b[j])))
     }
 }
