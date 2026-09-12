@@ -168,15 +168,11 @@ impl LearnableSheaf {
         match self.family {
             RestrictionFamily::Diagonal => {
                 // Each endpoint: d parameters, all 1.0
-                for p in &mut self.params {
-                    *p = 1.0;
-                }
+                self.params.fill(1.0);
             }
             RestrictionFamily::Orthogonal => {
                 // All zeros => exp(0) = I
-                for p in &mut self.params {
-                    *p = 0.0;
-                }
+                self.params.fill(0.0);
             }
             RestrictionFamily::General => {
                 // Each endpoint: d*d parameters forming identity matrix (column-major)

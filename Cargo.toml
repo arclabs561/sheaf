@@ -48,7 +48,7 @@ rkhs = { version = "0.3.0", optional = true }
 wass = { version = "0.2.2", optional = true }
 
 # Optional stochastic sampling
-drawset = { version = "0.1.0", optional = true }
+drawset = { version = "0.1.2", optional = true }
 
 [features]
 #

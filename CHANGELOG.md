@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Require drawset 0.1.2 for the optional stochastic-sampling feature.
+
 ## [0.1.10] - 2026-07-07
 
 ### Changed
