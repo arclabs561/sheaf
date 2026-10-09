@@ -11,7 +11,7 @@
 //! 4. Estimate gradients via finite differences
 //! 5. Update parameters with SGD
 //!
-//! Reference: Bodnar et al., "Neural Sheaf Diffusion", ICML 2022.
+//! Reference: Bodnar et al., "Neural Sheaf Diffusion", NeurIPS 2022.
 
 use sheaf::learnable_sheaf::{LearnableSheaf, RestrictionFamily};
 

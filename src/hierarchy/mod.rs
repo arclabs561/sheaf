@@ -95,7 +95,9 @@
 //! - Sarthi et al. (2024). "RAPTOR: Recursive Abstractive Processing for
 //!   Tree-Organized Retrieval." ICLR.
 //! - Kusupati et al. (2022). "Matryoshka Representation Learning." NeurIPS.
-//! - Wei et al. (2022). "ADSampling." VLDB.
+//! - Gao & Long (2023). "High-Dimensional Approximate Nearest Neighbor Search:
+//!   with Reliable and Efficient Distance Comparison Operations" (ADSampling).
+//!   SIGMOD. arXiv:2303.09855.
 
 pub mod conformal;
 mod dendrogram;

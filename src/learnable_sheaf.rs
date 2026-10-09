@@ -6,7 +6,7 @@
 //! - **Orthogonal**: $F = \exp(A)$ where $A$ is skew-symmetric. Parameters: $k(k-1)/2$ per endpoint.
 //! - **General**: arbitrary $k \times k$ matrix. Parameters: $k^2$ per endpoint.
 //!
-//! Reference: Bodnar et al., "Neural Sheaf Diffusion", ICML 2022.
+//! Reference: Bodnar et al., "Neural Sheaf Diffusion", NeurIPS 2022.
 
 use faer::Mat;
 
