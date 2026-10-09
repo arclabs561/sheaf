@@ -120,6 +120,19 @@ mod tests {
     }
 
     #[test]
+    fn conformal_calibration_sorts_nan_scores_without_panicking() -> Result<()> {
+        // A NaN truth value gives a NaN score. total_cmp sorts it after every
+        // number, so the 5th-smallest of 9 scores is still the finite 5c.
+        let (mut y_calib, y_hat_calib) = calibration_with_errors(9);
+        y_calib[(0, 8)] = f64::NAN;
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        cp.calibrate(&y_calib, &y_hat_calib, 0.5)?;
+        assert!(cp.quantile().is_finite());
+        Ok(())
+    }
+
+    #[test]
     fn test_reconciliation_mint() -> Result<()> {
         let s = SummingMatrix::simple_star(2);
         let m = s.m();
