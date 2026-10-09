@@ -33,14 +33,27 @@ impl HierarchicalConformal {
     /// # Arguments
     /// * `y_calib` - True values for calibration set ($m \times N$)
     /// * `y_hat_calib` - Base forecasts for calibration set ($m \times N$)
-    /// * `alpha` - Miscoverage level (e.g., 0.1 for 90% coverage)
+    /// * `alpha` - Miscoverage level in `(0, 1)` (e.g., 0.1 for 90% coverage)
+    ///
+    /// If the calibration set is too small for the requested coverage
+    /// (`ceil((n + 1)(1 - alpha)) > n`), the quantile is `f64::INFINITY` and
+    /// the intervals are unbounded.
     pub fn calibrate(
         &mut self,
         y_calib: &Mat<f64>,
         y_hat_calib: &Mat<f64>,
         alpha: f64,
     ) -> Result<()> {
+        if !(alpha > 0.0 && alpha < 1.0) {
+            return Err(Error::InvalidParameter {
+                name: "alpha",
+                message: "must be in (0, 1)",
+            });
+        }
         let n_calib = y_calib.ncols();
+        if n_calib == 0 {
+            return Err(Error::EmptyInput);
+        }
         if y_hat_calib.ncols() != n_calib {
             return Err(Error::ShapeMismatch {
                 expected: format!("{} columns", n_calib),
@@ -65,10 +78,18 @@ impl HierarchicalConformal {
             scores.push(score.sqrt());
         }
 
-        // 3. Compute quantile
+        // 3. Compute quantile: the ceil((n + 1)(1 - alpha))-th smallest score.
+        // When that rank exceeds n, no finite radius guarantees 1 - alpha
+        // coverage, so the radius is unbounded.
         scores.sort_by(|a, b| a.total_cmp(b));
-        let q_idx = (((n_calib + 1) as f64 * (1.0 - alpha)).ceil() as usize).min(n_calib) - 1;
-        self.quantile = scores[q_idx];
+        // ceil(N * (1 - alpha)) equals N - floor(N * alpha).
+        let total = (n_calib + 1) as f64;
+        let rank = (total - (total * alpha).floor()) as usize;
+        self.quantile = if rank > n_calib {
+            f64::INFINITY
+        } else {
+            scores[rank - 1]
+        };
         self.scores = scores;
 
         Ok(())

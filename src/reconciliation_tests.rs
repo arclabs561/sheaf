@@ -56,6 +56,69 @@ mod tests {
         Ok(())
     }
 
+    fn calibration_with_errors(n: usize) -> (Mat<f64>, Mat<f64>) {
+        let y_calib = Mat::<f64>::zeros(3, n);
+        let mut y_hat_calib = Mat::<f64>::zeros(3, n);
+        for j in 0..n {
+            y_hat_calib[(1, j)] = (j + 1) as f64;
+        }
+        (y_calib, y_hat_calib)
+    }
+
+    #[test]
+    fn conformal_quantile_is_infinite_when_rank_exceeds_n() -> Result<()> {
+        // Split conformal takes the ceil((n + 1)(1 - alpha))-th smallest score.
+        // n = 5, alpha = 0.1: ceil(6 * 0.9) = 6 > 5, so no finite score
+        // guarantees 90% coverage and the radius must be unbounded.
+        let (y_calib, y_hat_calib) = calibration_with_errors(5);
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        cp.calibrate(&y_calib, &y_hat_calib, 0.1)?;
+        assert_eq!(cp.quantile(), f64::INFINITY);
+
+        let (lower, upper) = cp.predict_intervals(&y_hat_calib)?;
+        assert_eq!(lower[(0, 0)], f64::NEG_INFINITY);
+        assert_eq!(upper[(0, 0)], f64::INFINITY);
+        Ok(())
+    }
+
+    #[test]
+    fn conformal_quantile_takes_finite_rank_when_n_is_large_enough() -> Result<()> {
+        // OLS reconciliation is linear, so score j is c * (j + 1) for a fixed c.
+        let (y_calib, y_hat_calib) = calibration_with_errors(9);
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        // n = 9, alpha = 0.1: ceil(10 * 0.9) = 9, the largest score (9c).
+        cp.calibrate(&y_calib, &y_hat_calib, 0.1)?;
+        let q_90 = cp.quantile();
+        // alpha = 0.5: ceil(10 * 0.5) = 5, the 5th-smallest score (5c).
+        cp.calibrate(&y_calib, &y_hat_calib, 0.5)?;
+        let q_50 = cp.quantile();
+        assert!(q_90.is_finite() && q_50 > 0.0);
+        assert!((q_90 / q_50 - 9.0 / 5.0).abs() < 1e-12);
+        Ok(())
+    }
+
+    #[test]
+    fn conformal_rejects_alpha_outside_unit_interval_and_empty_calibration() {
+        let (y_calib, y_hat_calib) = calibration_with_errors(5);
+        for alpha in [0.0, 1.0, -0.1, 1.5, f64::NAN] {
+            let mut cp = HierarchicalConformal::new(
+                SummingMatrix::simple_star(2),
+                ReconciliationMethod::Ols,
+            );
+            assert!(
+                cp.calibrate(&y_calib, &y_hat_calib, alpha).is_err(),
+                "alpha = {alpha} must be rejected"
+            );
+        }
+
+        let (y_empty, y_hat_empty) = calibration_with_errors(0);
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        assert!(cp.calibrate(&y_empty, &y_hat_empty, 0.1).is_err());
+    }
+
     #[test]
     fn test_reconciliation_mint() -> Result<()> {
         let s = SummingMatrix::simple_star(2);
