@@ -15,6 +15,8 @@
 //! **Default build** is hierarchy-first (minimal dependencies). Algorithmic clustering and community detection
 //! are opt-in via feature flags.
 
+#![cfg_attr(feature = "cluster", doc = include_str!("../README.md"))]
+
 #[cfg(feature = "cluster")]
 pub mod cluster;
 #[cfg(feature = "community")]

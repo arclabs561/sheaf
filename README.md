@@ -45,24 +45,28 @@ The clustering-evaluation metrics check whether two point sets share the same cl
 
 K-means and DBSCAN accept a pluggable distance metric via `with_metric`. Built-in metrics
 re-exported from `clump`: `Euclidean`, `SquaredEuclidean`, `CosineDistance`, `InnerProductDistance`.
-Implement `DistanceMetric` for your own.
+Implement `DistanceMetric` for your own. These need the `cluster` feature:
+
+```toml
+[dependencies]
+sheaf = { version = "0.1", features = ["cluster"] }
+```
 
 ```rust
-use sheaf::{Kmeans, CosineDistance};
+use sheaf::cluster::Dbscan;
+use sheaf::{Clustering, CosineDistance, Kmeans};
 
 let data = vec![vec![1.0, 0.0], vec![0.9, 0.1], vec![0.0, 1.0]];
 let km = Kmeans::with_metric(2, CosineDistance)
     .with_seed(42)
-    .with_seeding_alpha(2.0); // oversampling factor for k-means++
-let labels = km.fit(&data)?;
-```
-
-```rust
-use sheaf::cluster::{Dbscan, CosineDistance};
+    .with_seeding_alpha(2.0); // exponent on distance in k-means++ seeding
+let labels = km.fit_predict(&data).unwrap();
+assert_eq!(labels.len(), 3);
 
 // epsilon is compared against cosine distance (range [0, 2])
-let db = Dbscan::with_metric(0.3, 5, CosineDistance);
-let labels = db.fit(&data);
+let db = Dbscan::with_metric(0.3, 2, CosineDistance);
+let labels = db.fit_predict(&data).unwrap();
+assert_eq!(labels[0], labels[1]);
 ```
 
 ## Usage
@@ -73,24 +77,33 @@ sheaf = "0.1"
 ```
 
 ```rust
+use faer::Mat;
 use sheaf::{HierarchicalConformal, HierarchyTree, ReconciliationMethod};
 
-// Build hierarchy, get summing matrix
-let h_tree = HierarchyTree::from_raptor(&tree);
+// Three leaves: node 3 = leaves 0 + 1, node 4 (root) = node 3 + leaf 2.
+let h_tree = HierarchyTree::from_merges(&[(0, 1, 1.0, 2), (3, 2, 2.0, 3)], 3);
 let s = h_tree.summing_matrix();
+let m = s.m();
 
-// Calibrate on held-out data
+// Calibrate on 19 held-out columns (truth and base forecasts, m x 19).
+let y_calib = Mat::from_fn(m, 19, |i, j| (i + j) as f64);
+let y_hat_calib = Mat::from_fn(m, 19, |i, j| (i + j) as f64 + 0.1 * ((j % 3) as f64 - 1.0));
 let mut cp = HierarchicalConformal::new(s, ReconciliationMethod::Ols);
-cp.calibrate(&y_calib, &y_hat_calib, 0.1)?; // 90% coverage
+cp.calibrate(&y_calib, &y_hat_calib, 0.1).unwrap(); // 90% coverage
 
 // Marginal prediction intervals around reconciled forecasts
-let (lower, upper) = cp.predict_intervals(&y_hat_test)?;
+let y_hat_test = Mat::from_fn(m, 1, |i, _| i as f64);
+let (lower, upper) = cp.predict_intervals(&y_hat_test).unwrap();
+assert!(lower[(0, 0)] <= upper[(0, 0)]);
 ```
+
+Python bindings are published on PyPI as `cohera` (`pip install cohera`); their
+source is in [sheaf-python/](sheaf-python/).
 
 ## References
 
 - Principato et al. (2024). "Conformal Prediction for Hierarchical Data."
-- Qiu & Li (2015). "IT-Dendrogram: A new representation for hierarchical clustering."
+- Qiu & Li (2015). "IT-Dendrogram: A New Member of the In-Tree (IT) Clustering Family."
 - Sarthi et al. (2024). "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval."
 
 ## License

@@ -8,6 +8,8 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: "17 6 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -56,6 +58,8 @@ jobs:
         run: cargo nextest run
       - name: doc tests
         run: cargo test --doc
+      - name: README doc tests
+        run: cargo test --doc --features cluster
       - name: run example assertions
         run: |
           cargo run --example neural_sheaf_diffusion
