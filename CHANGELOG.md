@@ -2,9 +2,34 @@
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-10-09
+
+### Added
+
+- `LouvainConnected`, the accurate name for the community detector formerly
+  called `Leiden`. It runs `graphops`'s connected-Louvain routine, whose
+  partitions can differ from true Leiden. `Leiden` remains as
+  `pub type Leiden = LouvainConnected` and gives the same partitions.
+
 ### Changed
 
-- Require drawset 0.1.2 for the optional stochastic-sampling feature.
+- Removed the optional `drawset` dependency, which no code used. The
+  `drawset` and `kuji` features remain as empty compatibility aliases. This
+  replaces the unreleased change that required drawset 0.1.2.
+- The optional `graphops` dependency (enabled by `community`) moves from 0.2
+  to 0.5.
+
+### Fixed
+
+- `HierarchicalConformal::calibrate` returns an infinite quantile (unbounded
+  intervals) when the conformal rank `ceil((n + 1)(1 - alpha))` exceeds the
+  calibration size `n`, instead of clamping to the largest score and
+  under-covering. `alpha` outside `(0, 1)` now returns
+  `Error::InvalidParameter`, and an empty calibration set returns
+  `Error::EmptyInput`; `alpha = 1` and an empty set previously underflowed
+  an index.
+- The kNN-graph sigma estimate and the GMM component argmax compare with
+  `total_cmp`, so NaN values no longer reach an inconsistent comparator.
 
 ## [0.1.10] - 2026-07-07
 
