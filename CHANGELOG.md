@@ -14,6 +14,12 @@
 - Gate the distribution-distance `Array2` import on its `wass` or test uses,
   so spectral builds without `wass` compile without an unused-import warning.
 
+### Maintenance
+
+- Pin the CI semver checker to 0.51.0 so it can parse stable Rust's
+  rustdoc JSON format while retaining the API comparison.
+- Execute all-feature tests, doctests and strict documentation builds in CI.
+
 ## [0.1.11] - 2026-10-09
 
 ### Added
