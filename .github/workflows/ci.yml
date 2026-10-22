@@ -56,10 +56,18 @@ jobs:
           tool: cargo-nextest
       - name: nextest
         run: cargo nextest run
+      - name: all-feature tests
+        run: cargo nextest run --all-features
       - name: doc tests
         run: cargo test --doc
       - name: README doc tests
         run: cargo test --doc --features cluster
+      - name: all-feature doc tests
+        run: cargo test --doc --all-features
+      - name: all-feature docs
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -Dwarnings
       - name: run example assertions
         run: |
           cargo run --example neural_sheaf_diffusion
@@ -81,5 +89,6 @@ jobs:
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2.83.2
         with:
-          tool: cargo-semver-checks
+          # Match the stable compiler's rustdoc JSON format.
+          tool: cargo-semver-checks@0.51.0
       - run: cargo semver-checks

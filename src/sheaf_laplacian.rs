@@ -11,8 +11,8 @@
 //! Reference: Hansen & Ghrist, "Toward a Spectral Theory of Cellular Sheaves" (2019).
 //!
 //! # Related crates
-//! - [`lapl`]: Standard graph Laplacians and spectral methods. The trivial sheaf Laplacian equals the graph Laplacian.
-//! - [`graphops`]: Graph algorithms (PageRank, walks) that operate on the same graph structures.
+//! - `lapl`: Standard graph Laplacians and spectral methods. The trivial sheaf Laplacian equals the graph Laplacian.
+//! - `graphops`: Graph algorithms (PageRank, walks) that operate on the same graph structures.
 
 use crate::error::{Error, Result};
 use faer::Mat;

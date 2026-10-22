@@ -30,8 +30,10 @@
 
 use crate::{Error, Result};
 
+#[cfg(all(feature = "ndarray", any(feature = "wass", test)))]
+use ndarray::Array2;
 #[cfg(feature = "ndarray")]
-use ndarray::{Array2, ArrayView2};
+use ndarray::ArrayView2;
 
 /// Configuration for distribution distances.
 #[derive(Debug, Clone)]
