@@ -164,6 +164,11 @@ impl SpectralClustering {
     }
 
     /// Fit using precomputed affinity matrix.
+    ///
+    /// Requires a nonempty, square, symmetric matrix with finite, nonnegative
+    /// weights for an undirected similarity graph. Empty input and shape are
+    /// checked; symmetry and the weight domain are caller preconditions and
+    /// are not validated before forwarding to [`lapl::spectral_embedding`].
     pub fn fit_affinity(&self, affinity: &Array2<f64>) -> Result<Vec<usize>> {
         let n = affinity.nrows();
         if n == 0 {

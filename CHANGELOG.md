@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Documentation
+
+- State the symmetry and finite, nonnegative weight preconditions for
+  `SpectralClustering::fit_affinity`. Runtime behavior is unchanged.
+- Keep related-crate names readable when optional dependencies are disabled,
+  fixing strict documentation builds without the `community` feature.
+
+### Fixed
+
+- Gate the distribution-distance `Array2` import on its `wass` or test uses,
+  so spectral builds without `wass` compile without an unused-import warning.
+
 ## [0.1.11] - 2026-10-09
 
 ### Added
