@@ -4,6 +4,8 @@
 
 ### Documentation
 
+- State in the README that Louvain reaches modularity 0.335 on the karate club
+  graph, below networkx's 0.395 to 0.420, as the ignored reference test shows.
 - State the symmetry and finite, nonnegative weight preconditions for
   `SpectralClustering::fit_affinity`. Runtime behavior is unchanged.
 - Keep related-crate names readable when optional dependencies are disabled,
