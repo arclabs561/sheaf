@@ -37,7 +37,10 @@ The clustering-evaluation metrics check whether two point sets share the same cl
 
 - **Clustering**: k-means, DBSCAN, hierarchical clustering.
 - **Community detection**: kNN graph construction (feature-gated), Louvain with or
-  without connectivity refinement, and label propagation.
+  without connectivity refinement, and label propagation. Known gap: on Zachary's
+  karate club both Louvain variants reach modularity 0.335 with 7 communities,
+  below networkx's 0.395 to 0.420; `tests/karate_modularity.rs` tracks this as an
+  ignored test.
 - **Hierarchy + conformal**: hierarchical point-forecast reconciliation and split conformal intervals.
 - **Metrics**: clustering evaluation helpers.
 
