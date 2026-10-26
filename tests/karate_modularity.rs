@@ -6,11 +6,9 @@
 //! graph. Modularity is computed here from its definition, independent of the
 //! crate under test.
 //!
-//! Both tests are ignored: on this graph `Louvain` and `LouvainConnected`
-//! return the same 7-community partition with modularity 0.335. No single-node
-//! move improves it, but merging communities does, so the aggregation phase
-//! does not appear to take effect. Run them
-//! with `cargo test --features community -- --ignored` once that is fixed.
+//! With graphops before 0.5.2 both returned a 7-community partition with
+//! modularity 0.335: aggregation counted a super-node's self-loop as a link to
+//! its own community, so nothing moved after the first level.
 #![cfg(feature = "community")]
 #![allow(clippy::unwrap_used)]
 
@@ -131,7 +129,6 @@ fn assert_in_networkx_range(name: &str, labels: &[usize]) {
 }
 
 #[test]
-#[ignore = "known gap: returns modularity 0.335 on karate, below networkx's 0.395..0.420"]
 fn louvain_connected_karate_modularity_is_in_networkx_range() {
     let g = karate();
     for seed in 0..5 {
@@ -141,7 +138,6 @@ fn louvain_connected_karate_modularity_is_in_networkx_range() {
 }
 
 #[test]
-#[ignore = "known gap: returns modularity 0.335 on karate, below networkx's 0.395..0.420"]
 fn louvain_karate_modularity_is_in_networkx_range() {
     let g = karate();
     assert_in_networkx_range("Louvain", &Louvain::new().detect(&g).unwrap());

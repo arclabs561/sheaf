@@ -2,10 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Louvain and connected Louvain now reach networkx's modularity range on the
+  karate club graph (0.415 to 0.420, 4 communities, was 0.335 with 7) by
+  requiring graphops 0.5.2, which stopped counting a super-node's self-loop
+  as a link to its own community. The karate reference tests run again.
+
 ### Documentation
 
 - State in the README that Louvain reaches modularity 0.335 on the karate club
   graph, below networkx's 0.395 to 0.420, as the ignored reference test shows.
+  Superseded by the fix above.
 - State the symmetry and finite, nonnegative weight preconditions for
   `SpectralClustering::fit_affinity`. Runtime behavior is unchanged.
 - Keep related-crate names readable when optional dependencies are disabled,
