@@ -425,7 +425,11 @@ mod tests {
         // RBConfigurationVertexPartition, resolution 1, seed 42, and
         // n_iterations=-1: {0,4} and {1,2,3,5}.
         let leiden_oracle = [1, 0, 0, 0, 1, 0];
-        assert_eq!(labels, [0, 1, 1, 2, 0, 2]);
+        // {0,1,2,4} {3,5}: the same modularity as the oracle (6/49) through a
+        // different partition. graphops before 0.5.2 counted a super-node's
+        // self-loop as a link to its own community and returned
+        // {0,4} {1,2} {3,5} (modularity 4/49).
+        assert_eq!(labels, [0, 0, 0, 1, 0, 1]);
         assert!(!same_partition(&labels, &leiden_oracle));
     }
 
