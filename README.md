@@ -76,6 +76,7 @@ assert_eq!(labels[0], labels[1]);
 ```toml
 [dependencies]
 sheaf = "0.1"
+faer = "0.19"
 ```
 
 ```rust

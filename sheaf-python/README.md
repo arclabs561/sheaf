@@ -16,7 +16,7 @@ import cohera
 
 # Reconcile incoherent forecasts to satisfy a hierarchy
 s = cohera.simple_star_matrix(3)  # 1 root + 3 leaves
-base = [12.0, 3.0, 4.0, 5.0]
+base = [15.0, 3.0, 4.0, 5.0]
 reconciled = cohera.reconcile(s, base, method="ols")
 # reconciled[0] == reconciled[1] + reconciled[2] + reconciled[3]
 
