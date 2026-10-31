@@ -116,6 +116,76 @@ fn it_dendrogram_k_zero_is_an_error_not_a_panic() {
     assert!(r.is_ok(), "k = 0 panicked");
 }
 
+/// Two blobs 100 apart. Every point links to its nearest denser point, so the
+/// in-tree has one root and one long edge between the blobs; cutting the single
+/// longest edge must separate them.
+#[cfg(feature = "cluster")]
+fn two_distant_blobs() -> Vec<Vec<f32>> {
+    let mut data = Vec::new();
+    for i in 0..20 {
+        let a = i as f32 * 0.7;
+        data.push(vec![
+            a.cos() * (0.2 + 0.03 * i as f32),
+            a.sin() * (0.2 + 0.02 * i as f32),
+        ]);
+        data.push(vec![
+            100.0 + a.sin() * (0.25 + 0.01 * i as f32),
+            a.cos() * (0.3 + 0.02 * i as f32),
+        ]);
+    }
+    data
+}
+
+#[cfg(feature = "cluster")]
+#[test]
+fn it_dendrogram_with_n_clusters_separates_two_distant_blobs() {
+    use sheaf::cluster::{Clustering, ItDendrogram};
+    let data = two_distant_blobs();
+    let l = ItDendrogram::new(5)
+        .with_n_clusters(2)
+        .fit_predict(&data)
+        .unwrap();
+    assert_eq!(n_clusters(&l), 2, "labels {l:?}");
+    let left: std::collections::HashSet<usize> = l.iter().step_by(2).copied().collect();
+    let right: std::collections::HashSet<usize> = l.iter().skip(1).step_by(2).copied().collect();
+    assert_eq!(left.len(), 1, "left blob split: {l:?}");
+    assert_eq!(right.len(), 1, "right blob split: {l:?}");
+    assert!(left.is_disjoint(&right), "labels {l:?}");
+}
+
+/// Without `with_n_clusters` there is no pruning: a single density maximum
+/// gives a single cluster, as documented.
+#[cfg(feature = "cluster")]
+#[test]
+fn it_dendrogram_without_n_clusters_does_not_prune() {
+    use sheaf::cluster::{Clustering, ItDendrogram};
+    let l = ItDendrogram::new(5)
+        .fit_predict(&two_distant_blobs())
+        .unwrap();
+    assert_eq!(n_clusters(&l), 1, "labels {l:?}");
+}
+
+#[cfg(feature = "cluster")]
+#[test]
+fn it_dendrogram_with_n_clusters_rejects_zero_and_more_than_n() {
+    use sheaf::cluster::{Clustering, ItDendrogram};
+    use sheaf::Error;
+    let data = vec![vec![0.0f32], vec![1.0], vec![5.0]];
+    assert!(matches!(
+        ItDendrogram::new(1).with_n_clusters(0).fit_predict(&data),
+        Err(Error::InvalidClusterCount { .. })
+    ));
+    assert!(matches!(
+        ItDendrogram::new(1).with_n_clusters(4).fit_predict(&data),
+        Err(Error::InvalidClusterCount { .. })
+    ));
+    let l = ItDendrogram::new(1)
+        .with_n_clusters(3)
+        .fit_predict(&data)
+        .unwrap();
+    assert_eq!(n_clusters(&l), 3, "labels {l:?}");
+}
+
 /// Initial means drawn with replacement can put two components on one point,
 /// where they stay identical and every label collapses to one cluster.
 #[cfg(feature = "cluster")]
