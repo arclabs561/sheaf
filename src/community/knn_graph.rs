@@ -209,9 +209,11 @@ pub fn knn_graph_with_config(
                 WeightFunction::Uniform => 1.0,
             };
 
-            // Add edge (petgraph deduplicates)
+            // `Graph::add_edge` always appends, so a mutual pair would get two
+            // parallel edges. `update_edge` reuses an existing edge in either
+            // direction; both directions see the same distance.
             if config.symmetric || i < neighbor_idx {
-                let _ = graph.add_edge(nodes[i], nodes[neighbor_idx], weight);
+                let _ = graph.update_edge(nodes[i], nodes[neighbor_idx], weight);
             }
         }
     }

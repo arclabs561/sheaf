@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `Dendrogram::cut_to_k` now applies exactly n − k merges. It cut at the
+  (n − k)th merge height and applied every merge at or below it, so tied
+  heights (for example duplicate points) gave fewer than k clusters:
+  single-linkage `HierarchicalClustering` on {0, 1, 10, 11} with k = 3
+  returned 2.
+- `LabelPropagation` with a fixed seed now returns the same partition on
+  every run. It drew tie candidates from a `HashMap`, whose iteration order
+  changes per process.
+- `knn_graph_from_embeddings` with `symmetric: true` now adds one edge per
+  mutual neighbour pair instead of two parallel edges, which changed the
+  graph passed on to community detection.
+- `SpectralClustering::fit` with `AffinityType::Precomputed` now returns
+  `Error::InvalidParameter` instead of panicking; precomputed matrices go
+  through `fit_affinity`.
+- `ItDendrogram` with `k = 0` now returns `Error::InvalidParameter` instead
+  of panicking.
+- `Gmm` now draws its initial means from distinct data points. Drawing with
+  replacement could start two components on one point; they stayed identical
+  and every point got one label (8 of 20 seeds on two well-separated pairs).
+- `ConcatSummarizer` now truncates at a UTF-8 character boundary instead of
+  panicking when `max_len` falls inside a multi-byte character.
+
 ## [0.1.12] - 2026-10-30
 
 ### Fixed

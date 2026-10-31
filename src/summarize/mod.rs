@@ -19,7 +19,8 @@ pub trait Summarizer<T, S = T> {
 pub struct ConcatSummarizer {
     /// Separator between items.
     pub separator: String,
-    /// Maximum length (truncate if exceeded).
+    /// Maximum length in bytes (truncate if exceeded). Truncation stops at a
+    /// UTF-8 character boundary, so the result can be a few bytes shorter.
     pub max_len: Option<usize>,
 }
 
@@ -55,7 +56,11 @@ impl Summarizer<String> for ConcatSummarizer {
 
         match self.max_len {
             Some(max) if joined.len() > max => {
-                let mut truncated = joined[..max.saturating_sub(3)].to_string();
+                let mut end = max.saturating_sub(3);
+                while !joined.is_char_boundary(end) {
+                    end -= 1;
+                }
+                let mut truncated = joined[..end].to_string();
                 truncated.push_str("...");
                 truncated
             }

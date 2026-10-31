@@ -64,6 +64,16 @@ impl Dendrogram {
     /// All merges with distance > threshold are "cut", producing
     /// separate clusters.
     pub fn cut_at_distance(&self, threshold: f64) -> Vec<usize> {
+        let n_applied = self
+            .merges
+            .iter()
+            .position(|m| m.distance > threshold)
+            .unwrap_or(self.merges.len());
+        self.labels_after_merges(n_applied)
+    }
+
+    /// Cluster labels after applying the first `n_applied` merges.
+    fn labels_after_merges(&self, n_applied: usize) -> Vec<usize> {
         // Track which cluster each original item belongs to.
         // cluster_map[i] = current cluster ID for item i
         let mut cluster_map: Vec<usize> = (0..self.n_items).collect();
@@ -72,11 +82,7 @@ impl Dendrogram {
         // When we merge clusters A and B, all items in A and B get the same new ID
         let mut cluster_id_map: Vec<usize> = (0..(2 * self.n_items)).collect();
 
-        for (i, merge) in self.merges.iter().enumerate() {
-            if merge.distance > threshold {
-                break;
-            }
-
+        for (i, merge) in self.merges.iter().take(n_applied).enumerate() {
             // New cluster ID for this merge
             let new_cluster_id = self.n_items + i;
 
@@ -138,14 +144,10 @@ impl Dendrogram {
             return Ok(self.cut_at_distance(f64::MAX));
         }
 
-        // Find the distance threshold
-        let threshold = if n_merges > 0 {
-            self.merges[n_merges - 1].distance
-        } else {
-            0.0
-        };
-
-        Ok(self.cut_at_distance(threshold))
+        // Apply exactly `n_merges` merges. Cutting at the last merge's height
+        // would also apply later merges tied at that height and return fewer
+        // than k clusters.
+        Ok(self.labels_after_merges(n_merges))
     }
 
     /// Number of original items.

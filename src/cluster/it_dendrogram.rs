@@ -68,6 +68,12 @@ impl Clustering for ItDendrogram {
         if data.is_empty() {
             return Err(Error::EmptyInput);
         }
+        if self.k == 0 {
+            return Err(Error::InvalidParameter {
+                name: "k",
+                message: "must be > 0",
+            });
+        }
         let n = data.len();
 
         // 1. Estimate densities

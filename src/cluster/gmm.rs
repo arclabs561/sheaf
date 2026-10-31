@@ -198,11 +198,11 @@ impl SoftClustering for Gmm {
         };
 
         // Initialize parameters
-        // Means: random points from data
+        // Means: k distinct data points. Drawing with replacement can put two
+        // components on one point, and identical components never separate.
         let mut means = Array2::zeros((k, d));
-        let indices: Vec<usize> = (0..n).collect();
-        for i in 0..k {
-            let idx = indices[rng.random_range(0..n)];
+        let indices = rand::seq::index::sample(&mut rng, n, k);
+        for (i, idx) in indices.iter().enumerate() {
             for j in 0..d {
                 means[[i, j]] = data_arr[[idx, j]] as f64;
             }
