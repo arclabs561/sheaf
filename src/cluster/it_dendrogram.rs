@@ -11,19 +11,27 @@ struct ITNode {
     density: f32,  // Local density estimate
 }
 
-/// IT-Dendrogram clustering (Qiu & Li, 2015).
-///
-/// Constructs an "effective in-tree" structure that reveals underlying cluster
-/// geometry even in high-dimensional or non-Euclidean spaces.
+/// In-tree clustering after Qiu & Li (2015), "IT-Dendrogram".
 ///
 /// Steps:
-/// 1. Estimate local density for each point (k-NN distance).
-/// 2. Link each point to its nearest neighbor with *higher* density.
-/// 3. Points with no higher-density neighbor are local maxima (roots).
-/// 4. Prune "undesired edges" (low-density bridges) to form clusters.
+/// 1. Estimate the density of each point as the inverse distance to its
+///    k-th nearest neighbour.
+/// 2. Link each point to its nearest point (over the whole data set) with
+///    strictly higher density. The edge length is that distance.
+/// 3. Points with no strictly denser point are roots.
+/// 4. If [`with_n_clusters`](Self::with_n_clusters) is set, remove the
+///    longest in-tree edges until that many trees remain.
+/// 5. Each tree is one cluster.
+///
+/// Without `with_n_clusters` no edges are removed, so the result has one
+/// cluster per root. Usually only the global density maximum is a root,
+/// which gives a single cluster even for well-separated groups; ties in
+/// density can add roots. Set `with_n_clusters(c)` to get `c` clusters: with
+/// one root this cuts the `c - 1` longest edges.
 #[derive(Debug, Clone)]
 pub struct ItDendrogram {
     k: usize, // k-NN for density estimation
+    n_clusters: Option<usize>,
 }
 
 impl ItDendrogram {
@@ -31,7 +39,23 @@ impl ItDendrogram {
     ///
     /// - \(k\) controls the neighborhood size used for density estimation.
     pub fn new(k: usize) -> Self {
-        Self { k }
+        Self {
+            k,
+            n_clusters: None,
+        }
+    }
+
+    /// Cut the longest in-tree edges until `n_clusters` trees remain.
+    ///
+    /// With a single root this removes the `n_clusters - 1` longest edges.
+    /// If the in-tree already has more roots than `n_clusters`, nothing is
+    /// cut and the result has one cluster per root. Edges of equal length
+    /// are cut in point-index order. `fit_predict` returns
+    /// `Error::InvalidClusterCount` when `n_clusters` is 0 or exceeds the
+    /// number of points.
+    pub fn with_n_clusters(mut self, n_clusters: usize) -> Self {
+        self.n_clusters = Some(n_clusters);
+        self
     }
 
     fn density_estimation(&self, data: &[Vec<f32>]) -> Vec<f32> {
@@ -75,6 +99,14 @@ impl Clustering for ItDendrogram {
             });
         }
         let n = data.len();
+        if let Some(c) = self.n_clusters {
+            if c == 0 || c > n {
+                return Err(Error::InvalidClusterCount {
+                    requested: c,
+                    n_items: n,
+                });
+            }
+        }
 
         // 1. Estimate densities
         let densities = self.density_estimation(data);
@@ -82,6 +114,7 @@ impl Clustering for ItDendrogram {
         // 2. Build In-Tree: link to nearest neighbor with higher density
         let mut parent = vec![None; n];
         let mut roots = Vec::new();
+        let mut edge_len = vec![0.0f32; n];
 
         for i in 0..n {
             let mut best_dist = f32::INFINITY;
@@ -102,8 +135,20 @@ impl Clustering for ItDendrogram {
 
             if let Some(p) = best_parent {
                 parent[i] = Some(p);
+                edge_len[i] = best_dist;
             } else {
                 roots.push(i); // Local density maximum
+            }
+        }
+
+        // Optional pruning: remove the longest edges until `c` trees remain.
+        if let Some(c) = self.n_clusters {
+            let n_cuts = c.saturating_sub(roots.len());
+            let mut edges: Vec<usize> = (0..n).filter(|&i| parent[i].is_some()).collect();
+            // Stable sort keeps index order among equal lengths.
+            edges.sort_by(|&a, &b| edge_len[b].total_cmp(&edge_len[a]));
+            for &i in edges.iter().take(n_cuts) {
+                parent[i] = None;
             }
         }
 
@@ -136,6 +181,7 @@ impl Clustering for ItDendrogram {
     }
 
     fn n_clusters(&self) -> usize {
-        0 // Determined dynamically
+        // 0 means the count is determined by the number of roots.
+        self.n_clusters.unwrap_or(0)
     }
 }

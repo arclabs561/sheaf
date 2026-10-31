@@ -2,7 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- `ItDendrogram::with_n_clusters(c)` cuts the longest in-tree edges until
+  `c` trees remain (the `c - 1` longest when the tree has one root), so two
+  well-separated blobs come back as two clusters. `fit_predict` returns
+  `Error::InvalidClusterCount` for `c = 0` or `c > n`. Additive; the default
+  behaviour is unchanged.
+
 ### Fixed
+
+- `ItDendrogram` docs now describe what `fit_predict` does. They listed a
+  step that prunes low-density bridges, but no edges were ever removed:
+  without `with_n_clusters` the result has one cluster per density maximum,
+  usually one cluster in total.
 
 - `Dendrogram::cut_to_k` now applies exactly n − k merges. It cut at the
   (n − k)th merge height and applied every merge at or below it, so tied
