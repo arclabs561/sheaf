@@ -4,6 +4,14 @@
 
 ### Fixed
 
+- `KmeansElkan` now compares later centres against a point's current centre
+  after reassigning it within a pass (Elkan 2003, step 3). It could move a
+  point to a farther centre, so its labels differed from Lloyd's from the same
+  initial centres.
+- `RaptorTree::build` now builds levels above the first. Level 2 clusters
+  contain summary nodes, which were skipped as having no leaf content, so the
+  tree stopped after one summary level. Each cluster is now summarized from
+  the leaf items under its members, and `leaf_count` counts those leaves.
 - Louvain and connected Louvain now reach networkx's modularity range on the
   karate club graph (0.415 to 0.420, 4 communities, was 0.335 with 7) by
   requiring graphops 0.5.2, which stopped counting a super-node's self-loop

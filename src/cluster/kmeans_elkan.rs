@@ -210,7 +210,12 @@ impl KmeansElkan {
             // Step 1: For each point, identify clusters that can be skipped
             // If upper[i] <= s[labels[i]], the assignment cannot change
             for i in 0..n {
-                let a_i = labels[i];
+                // a_i follows the point when it is reassigned within this
+                // pass; Elkan (2003) step 3 compares every later centre
+                // against the current one, not the one held at the start.
+                let mut a_i = labels[i];
+                // upper[i] is exact once computed in this pass (Elkan's r(x)).
+                let mut upper_tight = false;
 
                 // Lemma 1: If upper[i] <= s[a_i], x_i's assignment cannot change
                 if upper[i] > s[a_i] {
@@ -227,10 +232,14 @@ impl KmeansElkan {
                             // Tighten upper bound if needed (lazy)
                             // Compute actual distance to current centroid
                             let point = data_arr.row(i);
-                            let d_a = squared_distance(&point, &centroids.row(a_i)).sqrt();
-                            upper[i] = d_a;
-                            lower[i][a_i] = d_a;
-                            stats.distance_computations += 1;
+                            if !upper_tight {
+                                let d_a = squared_distance(&point, &centroids.row(a_i)).sqrt();
+                                upper[i] = d_a;
+                                lower[i][a_i] = d_a;
+                                upper_tight = true;
+                                stats.distance_computations += 1;
+                            }
+                            let d_a = upper[i];
 
                             // Now check if we still need to compute d(x_i, c_j)
                             if d_a > lower[i][j] && d_a > centroid_half_dist[[a_i, j]] {
@@ -240,6 +249,7 @@ impl KmeansElkan {
 
                                 if d_j < d_a {
                                     labels[i] = j;
+                                    a_i = j;
                                     upper[i] = d_j;
                                 }
                             } else {

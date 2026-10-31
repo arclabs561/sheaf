@@ -106,7 +106,8 @@ impl<T, S> RaptorTree<T, S> {
     ///
     /// - `items`: The leaf items to build the tree from
     /// - `cluster_fn`: Function that groups items into clusters
-    /// - `summarize_fn`: Function that summarizes a group of items/summaries
+    /// - `summarize_fn`: Function that summarizes the leaf items under a cluster;
+    ///   at level 2 and above it receives the leaves of the member summaries
     ///
     /// ## Example
     ///
@@ -172,10 +173,13 @@ impl<T, S> RaptorTree<T, S> {
                     continue;
                 }
 
-                // Collect items to summarize
+                // Collect the leaf items under this cluster. From level 2 on
+                // the members are summary nodes, and `summarize_fn` takes
+                // leaf items, so descend to their leaves.
                 let items_to_summarize: Vec<&T> = cluster
                     .iter()
-                    .filter_map(|&id| tree.get_leaf_content(id))
+                    .flat_map(|&id| tree.leaf_descendants(id))
+                    .filter_map(|id| tree.get_leaf_content(id))
                     .collect();
 
                 if items_to_summarize.is_empty() {
@@ -187,7 +191,7 @@ impl<T, S> RaptorTree<T, S> {
 
                 // Create summary node
                 let metadata = NodeMetadata {
-                    leaf_count: cluster.len(),
+                    leaf_count: items_to_summarize.len(),
                     cluster_method: Some("provided".into()),
                     summary_method: Some("provided".into()),
                 };
@@ -208,6 +212,20 @@ impl<T, S> RaptorTree<T, S> {
         }
 
         Ok(tree)
+    }
+
+    /// IDs of the leaves under node `id` (the node itself if it is a leaf).
+    fn leaf_descendants(&self, id: usize) -> Vec<usize> {
+        let mut leaves = Vec::new();
+        let mut stack = vec![id];
+        while let Some(cur) = stack.pop() {
+            match self.nodes.get(cur) {
+                Some(node) if node.is_leaf() => leaves.push(cur),
+                Some(node) => stack.extend(node.children.iter().rev()),
+                None => {}
+            }
+        }
+        leaves
     }
 
     /// Get content of a leaf node by ID.
