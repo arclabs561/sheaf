@@ -56,10 +56,77 @@
 //! - Ng, Jordan, Weiss (2001). "On Spectral Clustering"
 //! - von Luxburg (2007). "A Tutorial on Spectral Clustering"
 
-use lapl::{gaussian_similarity, knn_graph, spectral_embedding, SpectralEmbeddingConfig};
+use lapl::{
+    gaussian_similarity, knn_graph, normalized_laplacian, spectral_embedding,
+    SpectralEmbeddingConfig,
+};
 use ndarray::Array2;
 
 use crate::{Error, Result};
+
+/// Ng–Jordan–Weiss embedding: the first `k` eigenvectors of
+/// `L_sym = I - D^{-1/2} A D^{-1/2}` (the constant one included), with rows
+/// normalized to unit length.
+///
+/// Small graphs (`n <= 64`) use `lapl`'s exact Jacobi path. Larger graphs use
+/// a dense `faer` eigendecomposition here: `lapl` 0.2 answers those sizes with
+/// 50 unchecked orthogonal-iteration steps (or, with `lapl/faer` above
+/// n = 512, a single-start-vector Krylov solver), which returns wrong
+/// eigenvectors on graphs with small spectral gaps or several components.
+fn ngjw_embedding(affinity: &Array2<f64>, k: usize) -> Result<Array2<f64>> {
+    // Spectral clustering typically uses the first k eigenvectors (Ng–Jordan–Weiss),
+    // then row-normalizes. Keeping the constant eigenvector improves stability here.
+    let cfg = SpectralEmbeddingConfig {
+        skip_first: false,
+        ..SpectralEmbeddingConfig::default()
+    };
+    let n = affinity.nrows();
+    if n <= cfg.jacobi_max_n || k >= n || affinity.ncols() != n {
+        // lapl reports invalid shapes and dimensions with its own errors.
+        return spectral_embedding(affinity, k, &cfg)
+            .map_err(|e| Error::Other(format!("lapl spectral_embedding failed: {e}")));
+    }
+
+    let lap = normalized_laplacian(affinity);
+    let m = faer::Mat::<f64>::from_fn(n, n, |i, j| lap[[i, j]]);
+    let mut values = faer::Col::<f64>::zeros(n);
+    let mut vectors = faer::Mat::<f64>::zeros(n, n);
+    let par = faer::Parallelism::None;
+    let params = Default::default();
+    let req = faer::linalg::evd::compute_hermitian_evd_req::<f64>(
+        n,
+        faer::linalg::evd::ComputeVectors::Yes,
+        par,
+        params,
+    )
+    .map_err(|e| Error::Other(format!("eigendecomposition workspace: {e:?}")))?;
+    let mut mem = faer::dyn_stack::GlobalPodBuffer::new(req);
+    faer::linalg::evd::compute_hermitian_evd(
+        m.as_ref(),
+        values.as_mut(),
+        Some(vectors.as_mut()),
+        par,
+        faer::dyn_stack::PodStack::new(&mut mem),
+        params,
+    );
+
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&a, &b| values.read(a).total_cmp(&values.read(b)));
+
+    let mut u = Array2::<f64>::zeros((n, k));
+    for (out_col, &col) in order.iter().take(k).enumerate() {
+        for i in 0..n {
+            u[[i, out_col]] = vectors.read(i, col);
+        }
+    }
+    for mut row in u.rows_mut() {
+        let norm = row.dot(&row).sqrt();
+        if norm > 0.0 {
+            row.mapv_inplace(|x| x / norm);
+        }
+    }
+    Ok(u)
+}
 
 /// Spectral clustering configuration and runner.
 ///
@@ -149,15 +216,7 @@ impl SpectralClustering {
         // Build affinity matrix
         let affinity = self.build_affinity(points);
 
-        // Delegate spectral embedding to `lapl` (single source of truth for Laplacian + eigensolver policy).
-        // Spectral clustering typically uses the first k eigenvectors (Ng–Jordan–Weiss),
-        // then row-normalizes. Keeping the constant eigenvector improves stability here.
-        let cfg = SpectralEmbeddingConfig {
-            skip_first: false,
-            ..SpectralEmbeddingConfig::default()
-        };
-        let embedding = spectral_embedding(&affinity, self.k, &cfg)
-            .map_err(|e| Error::Other(format!("lapl spectral_embedding failed: {e}")))?;
+        let embedding = ngjw_embedding(&affinity, self.k)?;
 
         // Run k-means on the embedding.
         self.kmeans_on_embedding(&embedding)
@@ -181,12 +240,7 @@ impl SpectralClustering {
             });
         }
 
-        let cfg = SpectralEmbeddingConfig {
-            skip_first: false,
-            ..SpectralEmbeddingConfig::default()
-        };
-        let embedding = spectral_embedding(affinity, self.k, &cfg)
-            .map_err(|e| Error::Other(format!("lapl spectral_embedding failed: {e}")))?;
+        let embedding = ngjw_embedding(affinity, self.k)?;
         self.kmeans_on_embedding(&embedding)
     }
 

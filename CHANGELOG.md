@@ -4,6 +4,15 @@
 
 ### Fixed
 
+- `SpectralClustering::fit` and `fit_affinity` above 64 points took their
+  eigenvectors from `lapl` 0.2's 50 unchecked orthogonal-iteration steps
+  (or, with `spectral-faer` above 512 points, a single-start-vector Krylov
+  solver that misses repeated eigenvalues). Two disconnected chains split by
+  position instead of by component, and kNN moons and circles at n = 200
+  scored ARI 0.007 and 0.015 against scikit-learn's 1.000. Those sizes now
+  use a dense `faer` eigendecomposition in sheaf, so the result no longer
+  depends on the `spectral-faer` feature; graphs of 64 points or fewer still
+  use `lapl`'s exact Jacobi path.
 - `KmeansElkan` now compares later centres against a point's current centre
   after reassigning it within a pass (Elkan 2003, step 3). It could move a
   point to a farther centre, so its labels differed from Lloyd's from the same
