@@ -72,8 +72,9 @@ impl CommunityDetection for LabelPropagation {
             for &node in &order {
                 let node_idx = petgraph::graph::NodeIndex::new(node);
 
-                // Count neighbor labels
-                let mut label_counts = std::collections::HashMap::new();
+                // Count neighbor labels. A BTreeMap keeps the tie candidates in
+                // label order, so a fixed seed draws the same label every run.
+                let mut label_counts = std::collections::BTreeMap::new();
                 for edge in graph.edges(node_idx) {
                     let neighbor = edge.target().index();
                     *label_counts.entry(labels[neighbor]).or_insert(0) += 1;

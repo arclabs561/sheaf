@@ -201,6 +201,12 @@ impl SpectralClustering {
     /// # Returns
     ///
     /// Cluster assignments for each point.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::InvalidParameter`] when the affinity is
+    /// [`AffinityType::Precomputed`]; pass the matrix to
+    /// [`fit_affinity`](Self::fit_affinity) instead.
     pub fn fit(&self, points: &Array2<f64>) -> Result<Vec<usize>> {
         let n = points.nrows();
         if n == 0 {
@@ -214,7 +220,7 @@ impl SpectralClustering {
         }
 
         // Build affinity matrix
-        let affinity = self.build_affinity(points);
+        let affinity = self.build_affinity(points)?;
 
         let embedding = ngjw_embedding(&affinity, self.k)?;
 
@@ -244,8 +250,8 @@ impl SpectralClustering {
         self.kmeans_on_embedding(&embedding)
     }
 
-    fn build_affinity(&self, points: &Array2<f64>) -> Array2<f64> {
-        match self.affinity {
+    fn build_affinity(&self, points: &Array2<f64>) -> Result<Array2<f64>> {
+        Ok(match self.affinity {
             AffinityType::Rbf => gaussian_similarity(points, self.sigma),
             AffinityType::Knn => {
                 // Build distance matrix first
@@ -264,10 +270,12 @@ impl SpectralClustering {
                 knn_graph(&distances, self.n_neighbors)
             }
             AffinityType::Precomputed => {
-                // This shouldn't happen via fit()
-                panic!("use fit_affinity for precomputed affinity")
+                return Err(Error::InvalidParameter {
+                    name: "affinity",
+                    message: "Precomputed takes an affinity matrix; use fit_affinity",
+                });
             }
-        }
+        })
     }
 
     fn kmeans_on_embedding(&self, embedding: &Array2<f64>) -> Result<Vec<usize>> {
