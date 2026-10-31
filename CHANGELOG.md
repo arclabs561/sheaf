@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-10-30
+
 ### Fixed
 
 - `SpectralClustering::fit` and `fit_affinity` above 64 points took their
