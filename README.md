@@ -5,71 +5,23 @@
 
 Sheaf and hierarchy algorithms.
 
-`sheaf` includes clustering, community detection, hierarchy reconciliation, and
-conformal intervals for tree-structured predictions.
-
-## Problem
-
-Use it for clustering points, detecting graph communities, and making
-tree-structured predictions sum to their parents.
-
-## Examples
-
-See [examples/README.md](examples/README.md) for the full runnable example map.
-
-**Embeddings to communities**. Build a kNN graph from 2D points and detect clusters
-with connectivity-refined Louvain:
-
-```bash
-cargo run --example embedding_clustering --features knn-graph
-```
-
-**Forecast reconciliation**. Given a tree of predictions, reconcile the point
-forecasts to the hierarchy, then produce marginal conformal intervals:
-
-```bash
-cargo run --example forecast_reconciliation
-```
-
-The clustering-evaluation metrics check whether two point sets share the same cluster structure: for example, whether a generated set of earthquake locations forms the same geographic clusters as the USGS catalog.
+Use it to make tree-structured predictions sum to their parents, put conformal
+intervals around them, cluster points, detect graph communities, and build
+cellular sheaf Laplacians.
 
 ## What it provides
 
-- **Clustering**: k-means, DBSCAN, hierarchical clustering.
-- **Community detection**: kNN graph construction (feature-gated), Louvain with or
-  without connectivity refinement, and label propagation. On Zachary's karate
-  club both Louvain variants reach networkx's modularity range (0.395 to 0.420),
-  checked by `tests/karate_modularity.rs`.
-- **Hierarchy + conformal**: hierarchical point-forecast reconciliation and split conformal intervals.
-- **Metrics**: clustering evaluation helpers.
-
-## Custom distance metrics
-
-K-means and DBSCAN accept a pluggable distance metric via `with_metric`. Built-in metrics
-re-exported from `clump`: `Euclidean`, `SquaredEuclidean`, `CosineDistance`, `InnerProductDistance`.
-Implement `DistanceMetric` for your own. These need the `cluster` feature:
-
-```toml
-[dependencies]
-sheaf = { version = "0.1", features = ["cluster"] }
-```
-
-```rust
-use sheaf::cluster::Dbscan;
-use sheaf::{Clustering, CosineDistance, Kmeans};
-
-let data = vec![vec![1.0, 0.0], vec![0.9, 0.1], vec![0.0, 1.0]];
-let km = Kmeans::with_metric(2, CosineDistance)
-    .with_seed(42)
-    .with_seeding_alpha(2.0); // exponent on distance in k-means++ seeding
-let labels = km.fit_predict(&data).unwrap();
-assert_eq!(labels.len(), 3);
-
-// epsilon is compared against cosine distance (range [0, 2])
-let db = Dbscan::with_metric(0.3, 2, CosineDistance);
-let labels = db.fit_predict(&data).unwrap();
-assert_eq!(labels[0], labels[1]);
-```
+- **Hierarchy + conformal** (default): hierarchical point-forecast
+  reconciliation and split conformal intervals.
+- **Sheaf Laplacians** (default): `CellularSheaf` and `LearnableSheaf` on graphs.
+- **Clustering** (`cluster` feature): k-means, DBSCAN, GMM, hierarchical
+  clustering.
+- **Community detection** (`community` feature): Louvain with or without
+  connectivity refinement, Leiden, and label propagation; kNN graph construction
+  from embeddings with `knn-graph`. On Zachary's karate club both Louvain
+  variants reach networkx's modularity range (0.395 to 0.420), checked by
+  `tests/karate_modularity.rs`.
+- **Metrics** (default): clustering evaluation (ARI, NMI, purity, and others).
 
 ## Usage
 
@@ -100,11 +52,71 @@ let (lower, upper) = cp.predict_intervals(&y_hat_test).unwrap();
 assert!(lower[(0, 0)] <= upper[(0, 0)]);
 ```
 
+`cargo run --example forecast_reconciliation` reconciles a product hierarchy
+whose base forecasts disagree (excerpt):
+
+```text
+Base (incoherent):
+         node   forecast
+-------------------------
+        Total     250.00
+  Electronics     120.00
+     Clothing      90.00
+...
+  Base coherence gap (Total vs leaf sum): 2.00e1 [INCOHERENT]
+
+OLS reconciled:
+         node   forecast
+-------------------------
+        Total     235.71
+  Electronics     132.86
+     Clothing     102.86
+...
+  OLS coherence gap (Total vs leaf sum): 0.00e0 [coherent]
+```
+
+## Custom distance metrics
+
+K-means and DBSCAN accept a pluggable distance metric via `with_metric`. Built-in metrics
+re-exported from `clump`: `Euclidean`, `SquaredEuclidean`, `CosineDistance`.
+Implement `DistanceMetric` for your own. These need the `cluster` feature:
+
+```toml
+[dependencies]
+sheaf = { version = "0.1", features = ["cluster"] }
+```
+
+```rust
+use sheaf::cluster::Dbscan;
+use sheaf::{Clustering, CosineDistance, Kmeans};
+
+let data = vec![vec![1.0, 0.0], vec![0.9, 0.1], vec![0.0, 1.0]];
+let km = Kmeans::with_metric(2, CosineDistance)
+    .with_seed(42)
+    .with_seeding_alpha(2.0); // exponent on distance in k-means++ seeding
+let labels = km.fit_predict(&data).unwrap();
+assert_eq!(labels.len(), 3);
+
+// epsilon is compared against cosine distance (range [0, 2])
+let db = Dbscan::with_metric(0.3, 2, CosineDistance);
+let labels = db.fit_predict(&data).unwrap();
+assert_eq!(labels[0], labels[1]);
+```
+
+## Examples
+
+[examples/README.md](examples/README.md) maps each runnable example to its task
+and required features.
+
+## Python
+
 Python bindings are published on PyPI as `cohera` (`pip install cohera`); their
 source is in [sheaf-python/](sheaf-python/).
 
 ## References
 
+- Bodnar et al. (2022). "Neural Sheaf Diffusion."
+- Hansen & Ghrist (2019). "Toward a Spectral Theory of Cellular Sheaves."
 - Principato et al. (2024). "Conformal Prediction for Hierarchical Data."
 - Qiu & Li (2015). "IT-Dendrogram: A New Member of the In-Tree (IT) Clustering Family."
 - Sarthi et al. (2024). "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval."
