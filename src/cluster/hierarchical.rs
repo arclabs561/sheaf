@@ -139,15 +139,15 @@ impl HierarchicalClustering {
         mut condensed: Vec<f64>,
         n: usize,
     ) -> Result<Dendrogram> {
+        if n == 0 {
+            return Err(Error::EmptyInput);
+        }
         let expected_len = n * (n - 1) / 2;
         if condensed.len() != expected_len {
             return Err(Error::DimensionMismatch {
                 expected: expected_len,
                 found: condensed.len(),
             });
-        }
-        if n == 0 {
-            return Err(Error::EmptyInput);
         }
 
         let method = match self.linkage {
