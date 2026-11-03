@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-02
+
 ### Added
 
 - `ItDendrogram::with_n_clusters(c)` cuts the longest in-tree edges until
