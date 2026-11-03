@@ -147,7 +147,9 @@ impl F32WeightedAdapter {
             let j = edge.target().index();
             let w = *edge.weight() as f64;
             adj[i].push((j, w));
-            adj[j].push((i, w));
+            if i != j {
+                adj[j].push((i, w));
+            }
         }
         Self { adj }
     }
@@ -165,11 +167,14 @@ impl Graph for F32WeightedAdapter {
 
 impl WeightedGraph for F32WeightedAdapter {
     fn edge_weight(&self, source: usize, target: usize) -> f64 {
+        // Parallel edges act as one edge whose weight is their sum, matching
+        // graphops's own petgraph adapter: its weighted Louvain visits each
+        // distinct neighbour once.
         self.adj[source]
             .iter()
-            .find(|(v, _)| *v == target)
+            .filter(|(v, _)| *v == target)
             .map(|(_, w)| *w)
-            .unwrap_or(0.0)
+            .sum()
     }
 }
 

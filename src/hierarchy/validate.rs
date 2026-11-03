@@ -424,6 +424,32 @@ pub fn validate_tree_structure(
         }
     }
 
+    // A node listed in more than one children list has several parents, so
+    // the structure is a DAG, not a tree. `parents` holds one parent per
+    // node and cannot show this. Overlapping (soft) clusterings produce it on
+    // purpose, so it is a warning rather than an error.
+    let mut parent_count: HashMap<usize, usize> = HashMap::new();
+    for node_children in children.values() {
+        for &child in node_children {
+            *parent_count.entry(child).or_insert(0) += 1;
+        }
+    }
+    let mut multi_parent: Vec<usize> = parent_count
+        .into_iter()
+        .filter(|&(_, count)| count > 1)
+        .map(|(child, _)| child)
+        .collect();
+    multi_parent.sort_unstable();
+    for child in multi_parent {
+        report.add(
+            ValidationIssue::new(
+                Severity::Warning,
+                "node is listed as a child of several parents",
+            )
+            .with_node(child),
+        );
+    }
+
     // Check for cycles using DFS with coloring
     let mut visited = HashSet::new();
     let mut in_stack = HashSet::new();

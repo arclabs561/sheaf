@@ -214,7 +214,7 @@ impl LearnableSheaf {
 fn params_per_endpoint(d: usize, family: RestrictionFamily) -> usize {
     match family {
         RestrictionFamily::Diagonal => d,
-        RestrictionFamily::Orthogonal => d * (d - 1) / 2,
+        RestrictionFamily::Orthogonal => d * d.saturating_sub(1) / 2,
         RestrictionFamily::General => d * d,
     }
 }
@@ -264,11 +264,12 @@ fn skew_symmetric_exp(d: usize, params: &[f64]) -> Vec<f64> {
     }
 
     if d == 2 {
-        // exp([[0, -theta], [theta, 0]]) = [[cos, -sin], [sin, cos]]
+        // exp([[0, theta], [-theta, 0]]) = [[cos, sin], [-sin, cos]], the same
+        // convention (A[0,1] = params[0]) as the d >= 3 paths.
         let theta = params[0];
         let (s, c) = theta.sin_cos();
         // column-major 2x2
-        return vec![c, s, -s, c];
+        return vec![c, -s, s, c];
     }
 
     if d == 3 {
@@ -360,15 +361,15 @@ fn matrix_inf_norm(d: usize, a: &[f64]) -> f64 {
 /// `exp(A) = (D + N)^{-1} (D - N)` where `N, D` are polynomial evaluations.
 /// (Actually: `exp(A) = D^{-1} N` where `N = sum b_i A^i`, `D = sum (-1)^i b_i A^i`.)
 fn pade_exp(d: usize, a: &[f64]) -> Vec<f64> {
-    // Pade(6,6) coefficients
+    // Pade(6,6) coefficients b_k = (12 - k)! 6! / (12! k! (6 - k)!)
     let b: [f64; 7] = [
         1.0,
         1.0 / 2.0,
-        1.0 / 9.0,
-        1.0 / 72.0,
-        1.0 / 1008.0,
-        1.0 / 30240.0,
-        1.0 / 1209600.0,
+        5.0 / 44.0,
+        1.0 / 66.0,
+        1.0 / 792.0,
+        1.0 / 15840.0,
+        1.0 / 665280.0,
     ];
 
     // Compute powers of A: A^1 through A^6
@@ -672,10 +673,10 @@ mod tests {
         let maps = ls.build_maps();
         let src = &maps[0].0;
         let (s, c) = angle.sin_cos();
-        // Column-major: [[c, s], [-s, c]]
+        // exp(A) with A[0,1] = angle is [[c, s], [-s, c]]; column-major [c, -s, s, c].
         assert!((src[0] - c).abs() < 1e-12);
-        assert!((src[1] - s).abs() < 1e-12);
-        assert!((src[2] - (-s)).abs() < 1e-12);
+        assert!((src[1] - (-s)).abs() < 1e-12);
+        assert!((src[2] - s).abs() < 1e-12);
         assert!((src[3] - c).abs() < 1e-12);
     }
 

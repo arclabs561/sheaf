@@ -146,7 +146,7 @@ fn sliced_wasserstein(
         &y_owned,
         n_projections,
         42,
-        2.0,
+        1.0,
     ))
 }
 

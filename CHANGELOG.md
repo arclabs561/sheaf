@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `HierarchicalClustering::fit_dendrogram_from_condensed` with `n = 0` now
+  returns `Error::EmptyInput`. The length check ran first and computed
+  `n * (n - 1) / 2`, which overflowed and panicked in debug builds.
+- `Louvain::detect_weighted` and `LouvainConnected::detect_weighted` now sum
+  the weights of parallel edges. They used only the first edge between two
+  nodes, so a bridge of 5 parallel unit edges counted as weight 1 and merged
+  two triangles that a single weight-5 bridge keeps apart. graphops's own
+  petgraph adapter and networkx 3.7 both sum parallel edges.
+- `LearnableSheaf` orthogonal maps for `stalk_dim = 2` now use the same
+  convention as larger stalks, `F = exp(A)` with the parameter at `A[0, 1]`.
+  The closed form used `A[1, 0]`, so one parameter rotated the opposite way
+  in 2-d. Maps for `stalk_dim = 2` change sign in their off-diagonal entries.
+- `LearnableSheaf` orthogonal maps for `stalk_dim >= 4` now use the Padé(6,6)
+  coefficients the code documents. It used the Padé(5,5) set plus an extra
+  term; the maps stayed exactly orthogonal but differed from `exp(A)` by
+  about 1e-8 (now below 1e-12).
+- `LearnableSheaf::new` with `stalk_dim = 0` and `RestrictionFamily::Orthogonal`
+  no longer panics in debug builds on `d * (d - 1) / 2`.
+- `validate_tree_structure` now warns when a node appears in more than one
+  children list. A node with two parents passed as a clean tree because only
+  the child-to-parent map was checked.
+- `DistributionDistance::sliced_wasserstein` now computes sliced W₁, as the
+  module and field docs state. It passed `p = 2` and returned sliced W₂: on
+  1-d inputs {0, 0, 0, 0} and {0, 0, 0, 4} it gave 2.0, where W₁ is 1.0 (POT
+  `sliced_wasserstein_distance` agrees).
+
 ## [0.2.0] - 2026-11-02
 
 ### Added
