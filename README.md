@@ -27,7 +27,7 @@ cellular sheaf Laplacians.
 
 ```toml
 [dependencies]
-sheaf = "0.2"
+sheaf = "0.3"
 faer = "0.19"
 ```
 
@@ -83,7 +83,7 @@ Implement `DistanceMetric` for your own. These need the `cluster` feature:
 
 ```toml
 [dependencies]
-sheaf = { version = "0.2", features = ["cluster"] }
+sheaf = { version = "0.3", features = ["cluster"] }
 ```
 
 ```rust
