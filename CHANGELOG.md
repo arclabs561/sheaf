@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
 ### Fixed
 
 - `HierarchicalClustering::fit_dendrogram_from_condensed` with `n = 0` now
