@@ -253,7 +253,7 @@ pub fn homogeneity(pred: &[usize], truth: &[usize]) -> f64 {
         return 0.0;
     }
 
-    let (h_c, h_c_given_k) = conditional_entropies(pred, truth);
+    let (h_c, h_c_given_k) = conditional_entropies(truth, pred);
 
     if h_c < 1e-10 {
         return 1.0; // All same class
@@ -272,7 +272,7 @@ pub fn completeness(pred: &[usize], truth: &[usize]) -> f64 {
         return 0.0;
     }
 
-    let (h_k, h_k_given_c) = conditional_entropies(truth, pred);
+    let (h_k, h_k_given_c) = conditional_entropies(pred, truth);
 
     if h_k < 1e-10 {
         return 1.0; // All same cluster
@@ -447,6 +447,21 @@ mod tests {
         let truth = [0, 0, 1, 1];
         // Purity should be 1.0 (each cluster is pure)
         assert!((purity(&pred, &truth) - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn homogeneity_and_completeness_are_not_interchanged() {
+        // One cluster holding two classes: complete, not homogeneous.
+        // sklearn: homogeneity_score = 0.0, completeness_score = 1.0.
+        let truth = vec![0, 0, 1, 1];
+        let merged = vec![0, 0, 0, 0];
+        assert!(homogeneity(&merged, &truth).abs() < 1e-12);
+        assert!((completeness(&merged, &truth) - 1.0).abs() < 1e-12);
+
+        // Each class split over two pure clusters: homogeneous, not complete.
+        let split = vec![0, 1, 2, 3];
+        assert!((homogeneity(&split, &truth) - 1.0).abs() < 1e-12);
+        assert!((completeness(&split, &truth) - 0.5).abs() < 1e-12);
     }
 
     #[test]
