@@ -199,6 +199,18 @@ def test_homogeneity_completeness_numpy():
     assert cohera.completeness(a, b) > 0.99
 
 
+@pytest.mark.parametrize(
+    ("pred", "homogeneity", "completeness"),
+    [([0, 0, 0, 0], 0.0, 1.0), ([0, 1, 2, 3], 1.0, 0.5)],
+)
+def test_asymmetric_cluster_metrics(pred, homogeneity, completeness):
+    truth = np.array([0, 0, 1, 1])
+    assert cohera.homogeneity(truth, pred) == pytest.approx(homogeneity)
+    assert cohera.completeness(labels_true=truth, labels_pred=pred) == pytest.approx(
+        completeness
+    )
+
+
 def test_fowlkes_mallows_numpy():
     a = np.array([0, 0, 1, 1])
     b = np.array([0, 0, 1, 1])

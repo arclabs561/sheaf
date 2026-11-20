@@ -558,9 +558,9 @@ fn homogeneity(
     labels_true: &Bound<'_, pyo3::PyAny>,
     labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_true)?;
-    let b = extract_labels(labels_pred)?;
-    Ok(sheaf::metrics::homogeneity(&a, &b))
+    let truth = extract_labels(labels_true)?;
+    let pred = extract_labels(labels_pred)?;
+    Ok(sheaf::metrics::homogeneity(&pred, &truth))
 }
 
 /// Completeness: all members of a class are assigned to the same cluster.
@@ -576,9 +576,9 @@ fn completeness(
     labels_true: &Bound<'_, pyo3::PyAny>,
     labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_true)?;
-    let b = extract_labels(labels_pred)?;
-    Ok(sheaf::metrics::completeness(&a, &b))
+    let truth = extract_labels(labels_true)?;
+    let pred = extract_labels(labels_pred)?;
+    Ok(sheaf::metrics::completeness(&pred, &truth))
 }
 
 /// Fowlkes-Mallows Index: geometric mean of pairwise precision and recall.
