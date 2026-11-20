@@ -540,9 +540,9 @@ fn purity(
     labels_true: &Bound<'_, pyo3::PyAny>,
     labels_pred: &Bound<'_, pyo3::PyAny>,
 ) -> PyResult<f64> {
-    let a = extract_labels(labels_true)?;
-    let b = extract_labels(labels_pred)?;
-    Ok(sheaf::metrics::purity(&a, &b))
+    let truth = extract_labels(labels_true)?;
+    let pred = extract_labels(labels_pred)?;
+    Ok(sheaf::metrics::purity(&pred, &truth))
 }
 
 /// Homogeneity: each cluster contains only members of a single class.
