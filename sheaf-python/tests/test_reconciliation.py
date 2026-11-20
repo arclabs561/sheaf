@@ -192,6 +192,12 @@ def test_purity_numpy():
     assert cohera.purity(a, b) > 0.99
 
 
+def test_purity_counts_the_majority_within_each_predicted_cluster():
+    truth = [0, 0, 1, 1]
+    assert cohera.purity(truth, [0, 0, 0, 0]) == 0.5
+    assert cohera.purity(labels_true=truth, labels_pred=[0, 1, 2, 3]) == 1.0
+
+
 def test_homogeneity_completeness_numpy():
     a = np.array([0, 0, 1, 1])
     b = np.array([0, 0, 1, 1])
