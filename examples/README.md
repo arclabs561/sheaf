@@ -44,3 +44,27 @@ has parent-child constraints. Use `embedding_clustering` when your input is a
 vector collection and you want graph communities. Use `sheaf_spectral` before
 the other sheaf Laplacian examples, because it shows the graph-Laplacian
 baseline first.
+
+## Check held-out forecasts from two files
+
+Use a total with two children. Each whitespace-separated row contains five
+numbers in this order: base total, base left, base right, observed left,
+observed right. The observed total is the sum of the two observed children.
+Supply past forecasts for calibration and separate rows for evaluation.
+
+```sh
+printf '30 10 20 11 20\n30 10 20 10 20\n30 10 20 12 20\n' > calibration.txt
+printf '30 10 20 11.2 18.8\n33 10 20 11 21\n' > test.txt
+cargo run --example forecast_coverage -- calibration.txt test.txt 0.5
+```
+
+The first forecast already adds up. Its observed child errors are +1.2 and
+−1.2. Each fits the calibrated radius of 1.4142, but the combined residual
+length is 1.6971. The coordinate box accepts this observation and the
+Euclidean ball excludes it. The second forecast starts with a total of 33
+and children summing to 30. OLS moves it to `32, 11, 21`, exactly matching
+the observation.
+
+The last argument is the target miscoverage. If calibration is too small
+for the requested level, the radius is infinite. The two hand-picked test
+rows demonstrate membership, not population coverage.
