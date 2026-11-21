@@ -120,6 +120,28 @@ mod tests {
     }
 
     #[test]
+    fn conformal_requires_one_truth_row_per_hierarchy_node() -> Result<()> {
+        let (truth, base) = calibration_with_errors(5);
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        cp.calibrate(&truth, &base, 0.5)?;
+        let previous = cp.quantile();
+
+        for rows in [0, 2, 4] {
+            let wrong = Mat::zeros(rows, base.ncols());
+            assert!(
+                matches!(
+                    cp.calibrate(&wrong, &base, 0.5),
+                    Err(crate::Error::ShapeMismatch { .. })
+                ),
+                "accepted {rows} truth rows"
+            );
+            assert_eq!(cp.quantile(), previous);
+        }
+        Ok(())
+    }
+
+    #[test]
     fn conformal_calibration_sorts_nan_scores_without_panicking() -> Result<()> {
         // A NaN truth value gives a NaN score. total_cmp sorts it after every
         // number, so the 5th-smallest of 9 scores is still the finite 5c.
