@@ -61,6 +61,13 @@ impl HierarchicalConformal {
             });
         }
 
+        if y_calib.nrows() != self.s.m() {
+            return Err(Error::ShapeMismatch {
+                expected: format!("{} rows", self.s.m()),
+                actual: format!("{} rows", y_calib.nrows()),
+            });
+        }
+
         // 1. Reconcile calibration forecasts
         let y_tilde_calib = reconcile(&self.s, y_hat_calib, self.method.clone())?;
 

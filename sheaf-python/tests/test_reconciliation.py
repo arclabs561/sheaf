@@ -134,6 +134,14 @@ def test_conformal_calibrate_predict():
     assert np.all(lower <= upper + 1e-12)
 
 
+@pytest.mark.parametrize("rows", [2, 4])
+def test_conformal_rejects_wrong_truth_row_count(rows):
+    hc = cohera.HierarchicalConformal(cohera.simple_star_matrix(2))
+    with pytest.raises(RuntimeError, match="shape mismatch"):
+        hc.calibrate(np.zeros((rows, 5)), np.zeros((3, 5)), alpha=0.5)
+    assert "calibrated=false" in repr(hc)
+
+
 def test_conformal_numpy_constructor():
     """HierarchicalConformal accepts numpy summing matrix."""
     s = np.array([[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]])
