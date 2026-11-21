@@ -103,6 +103,10 @@ clump = "0.5"
 rmt = "0.1.3"
 
 [[example]]
+name = "forecast_coverage"
+test = true
+
+[[example]]
 name = "forecast_reconciliation"
 path = "examples/forecast_reconciliation.rs"
 

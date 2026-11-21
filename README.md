@@ -52,6 +52,9 @@ let (lower, upper) = cp.predict_intervals(&y_hat_test).unwrap();
 assert!(lower[(0, 0)] <= upper[(0, 0)]);
 ```
 
+To try your own calibration and held-out forecasts, see the
+[five-column input example](examples/README.md#check-held-out-forecasts-from-two-files).
+
 `cargo run --example forecast_reconciliation` reconciles a product hierarchy
 whose base forecasts disagree (excerpt):
 
