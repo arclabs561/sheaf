@@ -81,15 +81,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rows_are_forecasts_and_observations_sum_to_the_total() {
+    fn rows_are_forecasts_and_observations_sum_to_the_total() -> Result<(), Box<dyn Error>> {
         let (base, actual) =
-            parse_forecasts(Path::new("data"), "33 10 20 11 21\n\n30 10 20 10 20").unwrap();
+            parse_forecasts(Path::new("data"), "33 10 20 11 21\n\n30 10 20 10 20")?;
         assert_eq!((base.nrows(), base.ncols()), (3, 2));
         assert_eq!(base[(0, 0)], 33.0);
         assert_eq!(actual[(0, 0)], 32.0);
         assert_eq!(actual[(1, 0)], 11.0);
         assert_eq!(actual[(2, 0)], 21.0);
         assert_eq!(actual[(0, 1)], 30.0);
+        Ok(())
     }
 
     #[test]
