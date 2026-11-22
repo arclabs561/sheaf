@@ -108,7 +108,7 @@ impl HierarchicalConformal {
         reconcile(&self.s, y_hat, self.method.clone())
     }
 
-    /// Get the computed quantile.
+    /// Get the computed quantile. Returns zero before calibration.
     pub fn quantile(&self) -> f64 {
         self.quantile
     }
@@ -117,7 +117,14 @@ impl HierarchicalConformal {
     ///
     /// For joint coverage with radius $Q$, the interval for each component $i$
     /// is $[\tilde{y}_i - Q, \tilde{y}_i + Q]$.
+    ///
+    /// Returns an error until calibration succeeds.
     pub fn predict_intervals(&self, y_hat: &Mat<f64>) -> Result<(Mat<f64>, Mat<f64>)> {
+        if self.scores.is_empty() {
+            return Err(Error::Other(
+                "must calibrate before predicting intervals".into(),
+            ));
+        }
         let y_tilde = self.predict(y_hat)?;
         let mut lower = y_tilde.clone();
         let mut upper = y_tilde.clone();

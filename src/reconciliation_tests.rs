@@ -120,6 +120,22 @@ mod tests {
     }
 
     #[test]
+    fn conformal_intervals_require_successful_calibration() -> Result<()> {
+        let mut cp =
+            HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
+        let zeros = Mat::zeros(3, 3);
+        cp.predict(&zeros)?;
+        assert!(cp.predict_intervals(&zeros).is_err());
+        assert!(cp.calibrate(&zeros, &zeros, 0.0).is_err());
+        assert!(cp.predict_intervals(&zeros).is_err());
+
+        cp.calibrate(&zeros, &zeros, 0.5)?;
+        let (lower, upper) = cp.predict_intervals(&zeros)?;
+        assert_eq!(lower, upper);
+        Ok(())
+    }
+
+    #[test]
     fn conformal_requires_one_truth_row_per_hierarchy_node() -> Result<()> {
         let (truth, base) = calibration_with_errors(5);
         let mut cp =
