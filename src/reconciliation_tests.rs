@@ -124,7 +124,7 @@ mod tests {
         let mut cp =
             HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
         let zeros = Mat::zeros(3, 3);
-        cp.predict(&zeros)?;
+        assert_eq!(cp.predict(&zeros)?, zeros);
         assert!(cp.predict_intervals(&zeros).is_err());
         assert!(cp.calibrate(&zeros, &zeros, 0.0).is_err());
         assert!(cp.predict_intervals(&zeros).is_err());
