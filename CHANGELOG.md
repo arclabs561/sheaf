@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-22
+
+### Fixed
+
+- Hierarchical conformal intervals require successful calibration, and
+  calibration validates the number of truth rows before scoring.
+- Clustering homogeneity and completeness use their documented argument order.
+
 ## [0.3.0] - 2026-11-03
 
 ### Fixed
