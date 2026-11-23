@@ -19,7 +19,7 @@ doc = false
 sheaf = { path = "..", features = ["cluster", "community", "metrics", "knn-graph"] }
 pyo3 = "0.29.0"
 numpy = "0.29.0"
-faer = "0.19"
+faer = "0.24"
 petgraph = "0.6"
 
 [workspace]
