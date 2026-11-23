@@ -35,6 +35,7 @@ impl HierarchicalConformal {
     /// * `y_hat_calib` - Base forecasts for calibration set ($m \times N$)
     /// * `alpha` - Miscoverage level in `(0, 1)` (e.g., 0.1 for 90% coverage)
     ///
+    /// Calibration requires finite residuals for every node and observation.
     /// If the calibration set is too small for the requested coverage
     /// (`ceil((n + 1)(1 - alpha)) > n`), the quantile is `f64::INFINITY` and
     /// the intervals are unbounded.
@@ -81,6 +82,12 @@ impl HierarchicalConformal {
             for i in 0..y_calib.nrows() {
                 let diff = y_calib[(i, j)] - y_tilde_calib[(i, j)];
                 score += diff.powi(2);
+            }
+            if !score.is_finite() {
+                return Err(Error::InvalidParameter {
+                    name: "calibration data",
+                    message: "residual scores must be finite",
+                });
             }
             scores.push(score.sqrt());
         }

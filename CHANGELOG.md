@@ -7,7 +7,7 @@
 ### Fixed
 
 - Hierarchical conformal intervals require successful calibration, and
-  calibration validates the number of truth rows before scoring.
+  calibration checks the truth row count and rejects nonfinite residual scores.
 - Clustering homogeneity and completeness use their documented argument order.
 
 ## [0.3.0] - 2026-11-03

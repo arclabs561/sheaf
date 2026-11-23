@@ -158,15 +158,22 @@ mod tests {
     }
 
     #[test]
-    fn conformal_calibration_sorts_nan_scores_without_panicking() -> Result<()> {
-        // A NaN truth value gives a NaN score. total_cmp sorts it after every
-        // number, so the 5th-smallest of 9 scores is still the finite 5c.
-        let (mut y_calib, y_hat_calib) = calibration_with_errors(9);
-        y_calib[(0, 8)] = f64::NAN;
+    fn conformal_rejects_nonfinite_calibration_without_replacing_the_radius() -> Result<()> {
+        let (truth, base) = calibration_with_errors(9);
         let mut cp =
             HierarchicalConformal::new(SummingMatrix::simple_star(2), ReconciliationMethod::Ols);
-        cp.calibrate(&y_calib, &y_hat_calib, 0.5)?;
-        assert!(cp.quantile().is_finite());
+        let missing = Mat::from_fn(3, 9, |_, _| f64::NAN);
+        assert!(cp.calibrate(&missing, &base, 0.5).is_err());
+        assert!(cp.predict_intervals(&base).is_err());
+
+        cp.calibrate(&truth, &base, 0.5)?;
+        let previous = cp.quantile();
+        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let mut invalid = truth.clone();
+            invalid[(0, 8)] = value;
+            assert!(cp.calibrate(&invalid, &base, 0.5).is_err());
+            assert_eq!(cp.quantile(), previous);
+        }
         Ok(())
     }
 
